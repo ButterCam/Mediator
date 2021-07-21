@@ -77,6 +77,21 @@ jobs:
           echo "::set-output name=artifact::$ARTIFACT"
           echo "::set-output name=os::$RUNNER_OS"
 
+      - name: Import cert for MacOS
+        if: matrix.os == 'macos-latest'
+        uses: apple-actions/import-codesign-certs@v1
+        with:
+          p12-file-base64: ${{ secrets.CERTIFICATES_P12 }}
+          p12-password: ${{ secrets.CERTIFICATES_P12_PASSWORD }}
+
+      - name: Setup Keychain
+        if: matrix.os == 'macos-latest'
+        run:|
+          xcrun altool --store-password-in-keychain-item "NOTARIZATION_PASSWORD" \
+                       --username ${{ secrets.NOTARIZATION_APPLEID }} \
+                       --password ${{ secrets.NOTARIZATION_PASSWORD }}
+          echo "NOTARIZATION_APPLEID=${{ secrets.NOTARIZATION_APPLEID }}" >> $GITHUB_ENV
+
       # Build artifact using buildPlugin Gradle task
       - name: Package
         run: ./gradlew package
