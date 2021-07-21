@@ -1,0 +1,135 @@
+name: Build
+on: [push, pull_request]
+jobs:
+  # Run Gradle Wrapper Validation Action to verify the wrapper's checksum
+  gradleValidation:
+    name: Gradle Wrapper
+    runs-on: ubuntu-latest
+    steps:
+
+      # Check out current repository
+      - name: Fetch Sources
+        uses: actions/checkout@v2
+
+      # Validate wrapper
+      - name: Gradle Wrapper Validation
+        uses: gradle/wrapper-validation-action@v1.0.3
+
+  # Build plugin with buildPlugin Gradle task and provide the artifact for the next workflow jobs
+  # Requires test job to be passed
+  build:
+    name: Build
+    needs: gradleValidation
+    strategy:
+      matrix:
+        platform: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.platform }}
+    outputs:
+      name: ${{ steps.properties.outputs.name }}
+      version: ${{ steps.properties.outputs.version }}
+      os: ${{ steps.properties.outputs.os }}
+      changelog: ${{ steps.properties.outputs.changelog }}
+      artifact: ${{ steps.properties.outputs.artifact }}
+    steps:
+
+      # Setup Java 1.16 environment for the next steps
+      - name: Setup Java
+        uses: actions/setup-java@v2
+        with:
+          java-version: 1.16
+
+      # Check out current repository
+      - name: Fetch Sources
+        uses: actions/checkout@v2
+
+      # Cache Gradle Dependencies
+      - name: Setup Gradle Dependencies Cache
+        uses: actions/cache@v2
+        with:
+          path: ~/.gradle/caches
+          key: ${{ runner.os }}-gradle-caches-${{ hashFiles('**/*.gradle', '**/*.gradle.kts', 'gradle.properties') }}
+
+      # Cache Gradle Wrapper
+      - name: Setup Gradle Wrapper Cache
+        uses: actions/cache@v2
+        with:
+          path: ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-wrapper-${{ hashFiles('**/gradle/wrapper/gradle-wrapper.properties') }}
+
+      # Set environment variables
+      - name: Export Properties
+        id: properties
+        shell: bash
+        run: |
+          PROPERTIES="$(./gradlew properties --console=plain -q)"
+          VERSION="$(echo "$PROPERTIES" | grep "^version:" | cut -f2- -d ' ')"
+          NAME="$(echo "$PROPERTIES" | grep "^name:" | cut -f2- -d ' ')"
+          CHANGELOG="$(./gradlew getChangelog --unreleased --no-header --console=plain -q)"
+          CHANGELOG="${CHANGELOG//'%'/'%25'}"
+          CHANGELOG="${CHANGELOG//$'\n'/'%0A'}"
+          CHANGELOG="${CHANGELOG//$'\r'/'%0D'}"
+          ARTIFACT="${NAME}-${VERSION}"
+
+          echo "::set-output name=version::$VERSION"
+          echo "::set-output name=name::$NAME"
+          echo "::set-output name=changelog::$CHANGELOG"
+          echo "::set-output name=artifact::$ARTIFACT"
+          echo "::set-output name=os::$RUNNER_OS"
+
+      # Build artifact using buildPlugin Gradle task
+      - name: Package
+        run: ./gradlew package
+
+      # Upload plugin artifact to make it available in the next jobs
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: mediator-artifact
+          path: |
+            ./desktop/build/compose/binaries/main/msi/
+            ./desktop/build/compose/binaries/main/dmg/
+            ./desktop/build/compose/binaries/main/deb/
+
+  # Prepare a draft release for GitHub Releases page for the manual verification
+  # If accepted and published, release workflow would be triggered
+  releaseDraft:
+    name: Release Draft
+    if: github.event_name != 'pull_request'
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+
+      # Check out current repository
+      - name: Fetch Sources
+        uses: actions/checkout@v2
+
+      # Remove old release drafts by using the curl request for the available releases with draft flag
+      - name: Remove Old Release Drafts
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          curl -H "Authorization: Bearer $GITHUB_TOKEN" https://api.github.com/repos/$GITHUB_REPOSITORY/releases \
+            | tr '\r\n' ' ' \
+            | jq '.[] | select(.draft == true) | .id' \
+            | xargs -I '{}' \
+          curl -X DELETE -H "Authorization: Bearer $GITHUB_TOKEN" https://api.github.com/repos/$GITHUB_REPOSITORY/releases/{}
+
+      # Download plugin artifact provided by the previous job
+      - name: Download Artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: mediator-artifact
+          path: ./binaries
+
+      # Upload artifact as a release asset
+      - name: Create Release Draft
+        id: create-release-draft
+        uses: softprops/action-gh-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ needs.build.outputs.version }}
+          name: v${{ needs.build.outputs.version }}
+          body: ${{ needs.build.outputs.changelog }}
+          draft: true
+          files: ./binaries/*

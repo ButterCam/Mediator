@@ -1,0 +1,2 @@
+io.kanro.mediator.proxy.frontend.http.HttpProxyProvider
+io.kanro.mediator.proxy.frontend.tcp.TcpProxyProvider
