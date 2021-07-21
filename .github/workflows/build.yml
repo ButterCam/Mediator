@@ -6,6 +6,10 @@ jobs:
     name: Gradle Wrapper
     runs-on: ubuntu-latest
     steps:
+      - name: Cancel Previous Runs
+        uses: styfle/cancel-workflow-action@0.7.0
+        with:
+          access_token: ${{ secrets.GITHUB_TOKEN }}
 
       # Check out current repository
       - name: Fetch Sources
