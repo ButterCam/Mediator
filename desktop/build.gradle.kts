@@ -63,7 +63,7 @@ compose.desktop {
 
                     notarization {
                         appleID.set(appleId)
-                        password.set("@keychain:NOTARIZATION_PASSWORD")
+                        password.set(System.getenv("NOTARIZATION_PASSWORD") ?: "@keychain:NOTARIZATION_PASSWORD")
                     }
                 }
             }
