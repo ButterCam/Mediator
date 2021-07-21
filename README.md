@@ -10,5 +10,5 @@ Based on [Netty](https://netty.io/) (proxy protocol), [Compose Desktop](https://
 
 ✔ **Cross-platform**, works on all your favorite platform like Windows, MacOS, Linux  
 ✔ **Jetbrains Style GUI**, easy integrating to your desktop  
-✔ **Host Rewrite**, redirect request to beta or test server without modify client code
+✔ **Host Rewrite**, redirect request to beta or test server without modify client code  
 ✔ **Server Reflection Support**, parsing gRPC request and response message
