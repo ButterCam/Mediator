@@ -86,7 +86,7 @@ jobs:
 
       - name: Setup Keychain
         if: matrix.os == 'macos-latest'
-        run:|
+        run: |
           xcrun altool --store-password-in-keychain-item "NOTARIZATION_PASSWORD" \
                        --username ${{ secrets.NOTARIZATION_APPLEID }} \
                        --password ${{ secrets.NOTARIZATION_PASSWORD }}
