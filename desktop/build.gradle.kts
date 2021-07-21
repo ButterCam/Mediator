@@ -22,8 +22,6 @@ dependencies {
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.6.0")
     implementation("net.harawata:appdirs:1.2.1")
 
-    implementation("org.jetbrains.compose:compose-gradle-plugin:0.5.0-build243")
-
     implementation(compose.desktop.currentOs) {
         exclude("org.jetbrains.compose.material")
     }
