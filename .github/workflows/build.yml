@@ -81,15 +81,6 @@ jobs:
           echo "::set-output name=artifact::$ARTIFACT"
           echo "::set-output name=os::$RUNNER_OS"
 
-      - name: Check cert for MacOS
-        if: matrix.platform == 'macos-latest'
-        env:
-          CERTIFICATES_P12: ${{ secrets.CERTIFICATES_P12 }}
-          CERTIFICATES_P12_PASSWORD: ${{ secrets.CERTIFICATES_P12_PASSWORD }}
-        run: |
-          md5 -s ${CERTIFICATES_P12}
-          md5 -s ${CERTIFICATES_P12_PASSWORD}
-
       - name: Import cert for MacOS
         if: matrix.platform == 'macos-latest'
         uses: apple-actions/import-codesign-certs@v1
