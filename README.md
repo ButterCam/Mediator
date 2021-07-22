@@ -19,7 +19,7 @@ Build with [Netty](https://netty.io/) (proxy protocol), [Compose Desktop](https:
 
 Download distribution from [release page](https://github.com/ButterCam/Mediator/releases).
 
-MSI for Windows, Dmg for macOS, deb for Linux.
+MSI for Windows, Dmg for macOS, Dmg(aarch64) for macOS(Apple Silicon), deb for Linux.
 
 ### Run
 
