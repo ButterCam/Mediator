@@ -35,6 +35,7 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusEvent
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.input.key.KeyEvent
 import androidx.compose.ui.input.pointer.pointerMoveFilter
 import androidx.compose.ui.text.input.KeyboardType
@@ -63,7 +64,6 @@ import io.kanro.mediator.desktop.viewmodel.ConfigViewModel
 import io.kanro.mediator.desktop.viewmodel.MetadataEntry
 import io.kanro.mediator.desktop.viewmodel.ServerRuleViewModel
 import java.awt.Cursor
-import java.awt.Image
 
 @Composable
 @OptIn(ExperimentalComposeUiApi::class)
@@ -74,7 +74,7 @@ fun ConfigDialog(
     state: DialogState = rememberDialogState(size = WindowSize(700.dp, 500.dp)),
     visible: Boolean = true,
     title: String = "Mediator Settings",
-    icon: Image? = null,
+    icon: Painter? = null,
     undecorated: Boolean = false,
     resizable: Boolean = false,
     enabled: Boolean = true,
@@ -96,7 +96,7 @@ fun ConfigDialog(
         onKeyEvent
     ) {
         CompositionLocalProvider(
-            LocalWindow provides dialog
+            LocalWindow provides this.window
         ) {
             Column(Modifier.background(JBTheme.panelColors.bgDialog)) {
                 JPanelBorder(Modifier.height(1.dp).fillMaxWidth())

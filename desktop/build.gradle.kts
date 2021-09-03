@@ -16,10 +16,10 @@ repositories {
 dependencies {
     implementation(project(":core"))
     implementation(project(":jetbrains-theme"))
-    implementation("org.jetbrains.kotlin:kotlin-reflect:1.5.0")
+    implementation("org.jetbrains.kotlin:kotlin-reflect:1.5.21")
     testImplementation(kotlin("test-junit5"))
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.6.0")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.6.0")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.7.2")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.7.2")
     implementation("net.harawata:appdirs:1.2.1")
 
     implementation(compose.desktop.currentOs) {

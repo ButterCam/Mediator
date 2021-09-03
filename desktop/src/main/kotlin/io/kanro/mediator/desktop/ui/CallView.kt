@@ -1,5 +1,8 @@
 package io.kanro.mediator.desktop.ui
 
+import androidx.compose.foundation.ContextMenuArea
+import androidx.compose.foundation.ContextMenuItem
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.VerticalScrollbar
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.Orientation
@@ -35,9 +38,7 @@ import androidx.compose.ui.input.pointer.PointerEvent
 import androidx.compose.ui.input.pointer.changedToUp
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.pointerMoveFilter
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.bybutter.sisyphus.jackson.toJson
@@ -47,8 +48,6 @@ import io.grpc.Metadata
 import io.kanro.compose.jetbrains.JBTheme
 import io.kanro.compose.jetbrains.SelectionScope
 import io.kanro.compose.jetbrains.control.Icon
-import io.kanro.compose.jetbrains.control.JContextMenu
-import io.kanro.compose.jetbrains.control.JContextMenuItem
 import io.kanro.compose.jetbrains.control.JPanelBorder
 import io.kanro.compose.jetbrains.control.ListItemHoverIndication
 import io.kanro.compose.jetbrains.control.ProgressBar
@@ -247,6 +246,7 @@ fun TimelineView(call: CallTimeline) {
 }
 
 @Composable
+@OptIn(ExperimentalFoundationApi::class)
 fun TimelineItemRow(
     timeline: CallTimeline,
     event: CallEvent,
@@ -255,139 +255,107 @@ fun TimelineItemRow(
     role: Role? = null,
     onClick: () -> Unit
 ) {
-    var dropdownMenu by remember { mutableStateOf<DpOffset?>(null) }
-    val density = LocalDensity.current
-
-    SelectionScope(selected) {
-        Row(
-            modifier = Modifier
-                .height(23.dp)
-                .fillMaxWidth()
-                .selectable(
-                    selected = selected,
-                    interactionSource = interactionSource,
-                    indication = ListItemHoverIndication,
-                    onClick = onClick,
-                    role = role
-                )
-                .run {
-                    if (selected) {
-                        background(color = JBTheme.selectionColors.active)
-                    } else {
-                        this
-                    }
-                }.rightClickable {
-                    with(density) {
-                        dropdownMenu = DpOffset(it.x.toDp(), it.y.toDp())
-                    }
-                }
-                .hoverable(rememberCoroutineScope(), interactionSource),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            val icon = when (event) {
-                is CallEvent.Accept -> "icons/reviewAccepted.svg"
-                is CallEvent.Close -> "icons/reviewRejected.svg"
-                is CallEvent.Input -> "icons/showWriteAccess.svg"
-                is CallEvent.Output -> "icons/showReadAccess.svg"
-                is CallEvent.Start -> "icons/connector.svg"
-            }
-            val text = when (event) {
-                is CallEvent.Accept -> "Server Accepted"
-                is CallEvent.Close -> "Closed"
-                is CallEvent.Input -> "Client Messaging"
-                is CallEvent.Output -> "Server Messaging"
-                is CallEvent.Start -> "Start"
-            }
-
-            Icon(icon, modifier = Modifier.padding(7.dp))
-            Text(text, maxLines = 1)
-        }
-    }
-
-    JContextMenu(
-        dropdownMenu != null,
-        {
-            dropdownMenu = null
-        },
-        offset = dropdownMenu ?: DpOffset.Zero
-    ) {
+    ContextMenuArea({
+        val result = mutableListOf<ContextMenuItem>()
         when (event) {
             is CallEvent.Start -> {
-                JContextMenuItem({
+                result += ContextMenuItem("Copy Authority") {
                     Toolkit.getDefaultToolkit().systemClipboard.setContents(StringSelection(event.authority), null)
-                    dropdownMenu = null
-                }) {
-                    Text("Copy Authority", modifier = Modifier.padding(horizontal = 7.dp))
                 }
-                JContextMenuItem({
+                result += ContextMenuItem("Copy Method Name") {
                     Toolkit.getDefaultToolkit().systemClipboard.setContents(StringSelection(event.method), null)
-                    dropdownMenu = null
-                }) {
-                    Text("Copy Method Name", modifier = Modifier.padding(horizontal = 7.dp))
                 }
-                JContextMenuItem({
+                result += ContextMenuItem("Copy Headers") {
                     Toolkit.getDefaultToolkit().systemClipboard.setContents(
                         StringSelection(
                             event.header.toMap().toJson()
                         ),
                         null
                     )
-                    dropdownMenu = null
-                }) {
-                    Text("Copy Headers", modifier = Modifier.padding(horizontal = 7.dp))
                 }
             }
             is CallEvent.Accept -> {
-                JContextMenuItem({
+                result += ContextMenuItem("Copy Headers") {
                     Toolkit.getDefaultToolkit().systemClipboard.setContents(
                         StringSelection(
                             event.header.toMap().toJson()
                         ),
                         null
                     )
-                    dropdownMenu = null
-                }) {
-                    Text("Copy Headers", modifier = Modifier.padding(horizontal = 7.dp))
                 }
             }
             is CallEvent.Close -> {
-                JContextMenuItem({
+                result += ContextMenuItem("Copy Trails") {
                     Toolkit.getDefaultToolkit().systemClipboard.setContents(
                         StringSelection(
                             event.trails.toMap().toJson()
                         ),
                         null
                     )
-                    dropdownMenu = null
-                }) {
-                    Text("Copy Trails", modifier = Modifier.padding(horizontal = 7.dp))
                 }
             }
             is CallEvent.Input -> {
                 val json = timeline.reflection().invoke {
                     event.message().toJson()
                 }
-                JContextMenuItem({
+                result += ContextMenuItem("Copy Message") {
                     Toolkit.getDefaultToolkit().systemClipboard.setContents(
                         StringSelection(json), null
                     )
-                    dropdownMenu = null
-                }) {
-                    Text("Copy Message", modifier = Modifier.padding(horizontal = 7.dp))
                 }
             }
             is CallEvent.Output -> {
                 val json = timeline.reflection().invoke {
                     event.message().toJson()
                 }
-                JContextMenuItem({
+                result += ContextMenuItem("Copy Message") {
                     Toolkit.getDefaultToolkit().systemClipboard.setContents(
                         StringSelection(json), null
                     )
-                    dropdownMenu = null
-                }) {
-                    Text("Copy Message", modifier = Modifier.padding(horizontal = 7.dp))
                 }
+            }
+        }
+        result
+    }) {
+        SelectionScope(selected) {
+            Row(
+                modifier = Modifier
+                    .height(23.dp)
+                    .fillMaxWidth()
+                    .selectable(
+                        selected = selected,
+                        interactionSource = interactionSource,
+                        indication = ListItemHoverIndication,
+                        onClick = onClick,
+                        role = role
+                    )
+                    .run {
+                        if (selected) {
+                            background(color = JBTheme.selectionColors.active)
+                        } else {
+                            this
+                        }
+                    }
+                    .hoverable(rememberCoroutineScope(), interactionSource),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                val icon = when (event) {
+                    is CallEvent.Accept -> "icons/reviewAccepted.svg"
+                    is CallEvent.Close -> "icons/reviewRejected.svg"
+                    is CallEvent.Input -> "icons/showWriteAccess.svg"
+                    is CallEvent.Output -> "icons/showReadAccess.svg"
+                    is CallEvent.Start -> "icons/connector.svg"
+                }
+                val text = when (event) {
+                    is CallEvent.Accept -> "Server Accepted"
+                    is CallEvent.Close -> "Closed"
+                    is CallEvent.Input -> "Client Messaging"
+                    is CallEvent.Output -> "Server Messaging"
+                    is CallEvent.Start -> "Start"
+                }
+
+                Icon(icon, modifier = Modifier.padding(7.dp))
+                Text(text, maxLines = 1)
             }
         }
     }
@@ -477,6 +445,7 @@ fun MetadataView(metadata: Metadata, modifier: Modifier = Modifier) {
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun MetadataItem(
     key: String,
@@ -485,9 +454,6 @@ fun MetadataItem(
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
     onClick: () -> Unit
 ) {
-    var dropdownMenu by remember { mutableStateOf<DpOffset?>(null) }
-    val density = LocalDensity.current
-
     Box(
         Modifier.fillMaxWidth()
             .selectable(
@@ -503,59 +469,41 @@ fun MetadataItem(
                     this
                 }
             }
-            .rightClickable {
-                with(density) {
-                    dropdownMenu = DpOffset(it.x.toDp(), it.y.toDp())
-                }
-            }
             .hoverable(rememberCoroutineScope(), interactionSource)
     ) {
-        SelectionScope(selected) {
-            Row(
-                Modifier.height(23.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Box(
-                    Modifier.padding(horizontal = 7.dp).weight(1f),
+        ContextMenuArea({
+            val result = mutableListOf<ContextMenuItem>()
+            result += ContextMenuItem("Copy") {
+                Toolkit.getDefaultToolkit().systemClipboard.setContents(StringSelection("$key: $value"), null)
+            }
+            result += ContextMenuItem("Copy Key") {
+                Toolkit.getDefaultToolkit().systemClipboard.setContents(StringSelection(key), null)
+            }
+            result += ContextMenuItem("Copy Value") {
+                Toolkit.getDefaultToolkit().systemClipboard.setContents(StringSelection(value), null)
+            }
+            result
+        }) {
+            SelectionScope(selected) {
+                Row(
+                    Modifier.height(23.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
+                    Box(
+                        Modifier.padding(horizontal = 7.dp).weight(1f),
+                    ) {
+                        Label(
+                            text = key,
+                            modifier = Modifier.align(Alignment.CenterEnd),
+                            color = JBTheme.textColors.infoInput,
+                            style = JBTheme.typography.defaultBold
+                        )
+                    }
                     Label(
-                        text = key,
-                        modifier = Modifier.align(Alignment.CenterEnd),
-                        color = JBTheme.textColors.infoInput,
-                        style = JBTheme.typography.defaultBold
+                        value,
+                        Modifier.weight(3f),
                     )
                 }
-                Label(
-                    value,
-                    Modifier.weight(3f),
-                )
-            }
-        }
-
-        JContextMenu(
-            dropdownMenu != null,
-            {
-                dropdownMenu = null
-            },
-            offset = dropdownMenu ?: DpOffset.Zero
-        ) {
-            JContextMenuItem({
-                Toolkit.getDefaultToolkit().systemClipboard.setContents(StringSelection("$key: $value"), null)
-                dropdownMenu = null
-            }) {
-                Text("Copy", modifier = Modifier.padding(horizontal = 7.dp))
-            }
-            JContextMenuItem({
-                Toolkit.getDefaultToolkit().systemClipboard.setContents(StringSelection(key), null)
-                dropdownMenu = null
-            }) {
-                Text("Copy Key", modifier = Modifier.padding(horizontal = 7.dp))
-            }
-            JContextMenuItem({
-                Toolkit.getDefaultToolkit().systemClipboard.setContents(StringSelection(value), null)
-                dropdownMenu = null
-            }) {
-                Text("Copy Value", modifier = Modifier.padding(horizontal = 7.dp))
             }
         }
     }
