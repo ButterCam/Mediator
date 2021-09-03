@@ -48,6 +48,7 @@ jobs:
         env:
           NOTARIZATION_APPLEID: ${{ secrets.NOTARIZATION_APPLEID }}
           NOTARIZATION_PASSWORD: ${{ secrets.NOTARIZATION_PASSWORD }}
+          NOTARIZATION_KEYCHAIN: /Users/runner/Library/Keychains/signing_temp.keychain-db
         run: ./gradlew :pick-or-not:package
 
       # Upload plugin artifact to make it available in the next jobs

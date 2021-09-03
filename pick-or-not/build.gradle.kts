@@ -56,7 +56,7 @@ compose.desktop {
                     signing {
                         sign.set(true)
                         identity.set("Beijing Muke Technology Co., Ltd.")
-                        keychain
+                        keychain.set(System.getenv("NOTARIZATION_KEYCHAIN"))
                     }
 
                     notarization {
