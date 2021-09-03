@@ -33,6 +33,10 @@ jobs:
           path: ~/.gradle/wrapper
           key: ${{ runner.os }}-gradle-wrapper-${{ hashFiles('**/gradle/wrapper/gradle-wrapper.properties') }}
 
+      - name: Find keychain
+        run: |
+          /usr/bin/security find-certificate -c "Developer ID Application"
+
       - name: Import cert for MacOS
         uses: apple-actions/import-codesign-certs@v1
         with:
