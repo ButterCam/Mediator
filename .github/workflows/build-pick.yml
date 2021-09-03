@@ -1,11 +1,10 @@
-name: Build
+name: Build Pick
 on: [push, pull_request]
 jobs:
   # Build plugin with buildPlugin Gradle task and provide the artifact for the next workflow jobs
   # Requires test job to be passed
   build:
     name: Build
-    needs: gradleValidation
     runs-on: macos-latest
     steps:
 
