@@ -33,15 +33,15 @@ jobs:
           path: ~/.gradle/wrapper
           key: ${{ runner.os }}-gradle-wrapper-${{ hashFiles('**/gradle/wrapper/gradle-wrapper.properties') }}
 
-      - name: Find keychain
-        run: |
-          /usr/bin/security find-certificate -c "Developer ID Application"
-
       - name: Import cert for MacOS
         uses: apple-actions/import-codesign-certs@v1
         with:
           p12-file-base64: ${{ secrets.CERTIFICATES_P12 }}
           p12-password: ${{ secrets.CERTIFICATES_P12_PASSWORD }}
+
+      - name: Find keychain
+        run: |
+          /usr/bin/security find-certificate -c "Developer ID Application"
 
       # Build artifact using buildPlugin Gradle task
       - name: Package
