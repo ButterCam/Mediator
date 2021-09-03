@@ -104,6 +104,9 @@ jobs:
             ./desktop/build/compose/binaries/main/msi/
             ./desktop/build/compose/binaries/main/dmg/
             ./desktop/build/compose/binaries/main/deb/
+            ./pick-or-not/build/compose/binaries/main/msi/
+            ./pick-or-not/build/compose/binaries/main/dmg/
+            ./pick-or-not/build/compose/binaries/main/deb/
 
   # Prepare a draft release for GitHub Releases page for the manual verification
   # If accepted and published, release workflow would be triggered

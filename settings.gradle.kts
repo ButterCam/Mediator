@@ -10,4 +10,5 @@ pluginManagement {
 rootProject.name = "mediator"
 include("core")
 include("desktop")
+include("pick-or-not")
 include("jetbrains-theme")
