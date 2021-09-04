@@ -151,7 +151,7 @@ class MainViewModel(val state: LazyListState) {
         selectedFileIndex.value = newIndex
     }
 
-    private fun moveTo(dir: String) {
+    fun moveTo(dir: String) {
         val index = selectedFileIndex.value
         if (index < 0) return
         val image = files[index]
@@ -185,6 +185,14 @@ fun main() {
                         Key.DirectionLeft -> vm.previous()
                         Key.DirectionUp -> vm.moveToUp()
                         Key.DirectionDown -> vm.moveToDown()
+                        Key.W -> vm.moveTo("classW")
+                        Key.A -> vm.moveTo("classA")
+                        Key.S -> vm.moveTo("classS")
+                        Key.D -> vm.moveTo("classD")
+                        Key.One -> vm.moveTo("class1")
+                        Key.Two -> vm.moveTo("class2")
+                        Key.Three -> vm.moveTo("class3")
+                        Key.Four -> vm.moveTo("class4")
                         Key.Z -> if (it.isCtrlPressed) vm.undo()
                     }
                 }
