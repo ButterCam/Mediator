@@ -510,6 +510,7 @@ fun MetadataView(
     }
 }
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun MetadataRowHeader(
     keyWidth: Dp,

@@ -15,7 +15,7 @@ repositories {
 
 dependencies {
     implementation(project(":core"))
-    implementation(project(":jetbrains-theme"))
+    implementation("com.bybutter.compose:compose-jetbrains-theme:1.0")
     implementation("org.jetbrains.kotlin:kotlin-reflect:1.5.21")
     testImplementation(kotlin("test-junit5"))
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.7.2")

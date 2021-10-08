@@ -32,6 +32,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.PointerEvent
@@ -67,6 +68,7 @@ import java.awt.Toolkit
 import java.awt.datatransfer.StringSelection
 import java.awt.event.MouseEvent
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun CallView(call: CallTimeline?) {
     var selectedTab by remember { mutableStateOf(0) }
@@ -179,6 +181,7 @@ fun StatisticsView(call: CallTimeline) {
     }
 }
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun TimelineView(call: CallTimeline) {
     var selectedEvent by remember(call) { mutableStateOf<CallEvent?>(null) }

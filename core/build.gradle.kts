@@ -30,3 +30,12 @@ tasks.test {
 tasks.withType<KotlinCompile>() {
     kotlinOptions.jvmTarget = "16"
 }
+
+ktlint {
+    filter {
+        val pattern = "${File.separatorChar}generated${File.separatorChar}"
+        exclude {
+            it.file.path.contains(pattern)
+        }
+    }
+}

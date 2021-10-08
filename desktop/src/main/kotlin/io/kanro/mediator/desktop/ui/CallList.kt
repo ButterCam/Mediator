@@ -31,6 +31,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerMoveFilter
@@ -123,6 +124,7 @@ fun CallList(viewModel: MainViewModel, modifier: Modifier = Modifier) {
 fun LazyListState.isScrolledToTheEnd() =
     layoutInfo.visibleItemsInfo.lastOrNull()?.index == layoutInfo.totalItemsCount - 1
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun CallRowHeader(
     idWidth: Dp,
