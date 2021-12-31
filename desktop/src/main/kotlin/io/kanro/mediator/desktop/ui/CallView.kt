@@ -512,17 +512,3 @@ fun MetadataItem(
         }
     }
 }
-
-internal fun Modifier.rightClickable(onClick: (IntOffset) -> Unit): Modifier {
-    return pointerInput(Unit) {
-        this.awaitPointerEventScope {
-            while (true) {
-                val event: PointerEvent = awaitPointerEvent()
-                val mouseEvent = event.awtEvent
-                if (mouseEvent.button == MouseEvent.BUTTON3 && event.changes.any { it.changedToUp() }) {
-                    onClick(IntOffset(mouseEvent.x, mouseEvent.y))
-                }
-            }
-        }
-    }
-}
