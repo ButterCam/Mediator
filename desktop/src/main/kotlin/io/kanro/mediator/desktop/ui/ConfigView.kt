@@ -40,6 +40,7 @@ import androidx.compose.ui.input.key.KeyEvent
 import androidx.compose.ui.input.pointer.pointerMoveFilter
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogState
@@ -71,11 +72,12 @@ fun ConfigDialog(
     vm: ConfigViewModel,
     onSave: (ConfigViewModel) -> Unit,
     onCloseRequest: () -> Unit,
-    state: DialogState = rememberDialogState(size = WindowSize(700.dp, 500.dp)),
+    state: DialogState = rememberDialogState(size = DpSize(700.dp, 500.dp)),
     visible: Boolean = true,
     title: String = "Mediator Settings",
     icon: Painter? = null,
     undecorated: Boolean = false,
+    transparent: Boolean = false,
     resizable: Boolean = false,
     enabled: Boolean = true,
     focusable: Boolean = true,
@@ -89,6 +91,7 @@ fun ConfigDialog(
         title,
         icon,
         undecorated,
+        transparent,
         resizable,
         enabled,
         focusable,

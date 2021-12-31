@@ -25,7 +25,6 @@ import io.kanro.mediator.desktop.viewmodel.MainViewModel
 import java.awt.Window
 import kotlin.system.exitProcess
 
-@OptIn(ExperimentalComposeUiApi::class)
 fun main() {
     application {
         val vm = remember { MainViewModel() }

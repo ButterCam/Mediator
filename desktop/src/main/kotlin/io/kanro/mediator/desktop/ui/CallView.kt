@@ -34,6 +34,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.awt.awtEvent
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.PointerEvent
 import androidx.compose.ui.input.pointer.changedToUp
@@ -517,7 +518,7 @@ internal fun Modifier.rightClickable(onClick: (IntOffset) -> Unit): Modifier {
         this.awaitPointerEventScope {
             while (true) {
                 val event: PointerEvent = awaitPointerEvent()
-                val mouseEvent = event.mouseEvent ?: continue
+                val mouseEvent = event.awtEvent
                 if (mouseEvent.button == MouseEvent.BUTTON3 && event.changes.any { it.changedToUp() }) {
                     onClick(IntOffset(mouseEvent.x, mouseEvent.y))
                 }

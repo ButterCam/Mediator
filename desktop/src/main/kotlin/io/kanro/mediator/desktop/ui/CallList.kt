@@ -124,8 +124,8 @@ fun CallList(viewModel: MainViewModel, modifier: Modifier = Modifier) {
 fun LazyListState.isScrolledToTheEnd() =
     layoutInfo.visibleItemsInfo.lastOrNull()?.index == layoutInfo.totalItemsCount - 1
 
-@OptIn(ExperimentalComposeUiApi::class)
 @Composable
+@OptIn(ExperimentalComposeUiApi::class)
 fun CallRowHeader(
     idWidth: Dp,
     authorityWidth: Dp,
