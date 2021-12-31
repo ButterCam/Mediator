@@ -9,13 +9,14 @@ plugins {
 }
 
 repositories {
+    mavenLocal()
     mavenCentral()
     maven { url = uri("https://maven.pkg.jetbrains.space/public/p/compose/dev") }
 }
 
 dependencies {
     implementation(project(":core"))
-    implementation("com.bybutter.compose:compose-jetbrains-theme:1.0")
+    implementation("com.bybutter.compose:compose-jetbrains-theme:1.0.1")
     implementation("org.jetbrains.kotlin:kotlin-reflect:1.6.10")
     testImplementation(kotlin("test-junit5"))
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.7.2")
