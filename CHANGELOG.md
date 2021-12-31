@@ -1,6 +1,8 @@
 # Changelog
 
 ## [Unreleased]
+
+## [1.1.1]
 - Upgrade to jetbrains compose theme 1.0.1
 
 ## [1.0.1]
