@@ -1,6 +1,7 @@
 # Changelog
 
 ## [Unreleased]
+- Fix pointer icon for resizeable control
 
 ## [1.1.2]
 - Support resolve any

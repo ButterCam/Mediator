@@ -34,7 +34,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.pointerMoveFilter
+import androidx.compose.ui.input.pointer.PointerIcon
+import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -49,7 +50,6 @@ import io.kanro.compose.jetbrains.control.ListItemHoverIndication
 import io.kanro.compose.jetbrains.control.Text
 import io.kanro.compose.jetbrains.control.jBorder
 import io.kanro.compose.jetbrains.interaction.hoverable
-import io.kanro.mediator.desktop.LocalWindow
 import io.kanro.mediator.desktop.model.CallTimeline
 import io.kanro.mediator.desktop.model.asState
 import io.kanro.mediator.desktop.viewmodel.MainViewModel
@@ -140,8 +140,6 @@ fun CallRowHeader(
             .jBorder(bottom = 1.dp, color = JBTheme.panelColors.border),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        var startResize by remember { mutableStateOf(false) }
-
         val idState = rememberDraggableState { delta ->
             resizing(0, delta)
         }
@@ -152,32 +150,12 @@ fun CallRowHeader(
             resizing(2, delta)
         }
 
-        val window = LocalWindow.current
-
         fun Modifier.resizeable(state: DraggableState): Modifier {
-            return pointerMoveFilter(
-                onEnter = {
-                    window.cursor = Cursor.getPredefinedCursor(Cursor.W_RESIZE_CURSOR)
-                    false
-                },
-                onExit = {
-                    if (!startResize) {
-                        window.cursor = Cursor.getDefaultCursor()
-                    }
-                    false
-                }
-            ).draggable(
-                orientation = Orientation.Horizontal,
-                state = state,
-                onDragStarted = {
-                    startResize = true
-                    window.cursor = Cursor.getPredefinedCursor(Cursor.W_RESIZE_CURSOR)
-                },
-                onDragStopped = {
-                    startResize = false
-                    window.cursor = Cursor.getDefaultCursor()
-                }
-            )
+            return pointerHoverIcon(PointerIcon(Cursor.getPredefinedCursor(Cursor.W_RESIZE_CURSOR)))
+                .draggable(
+                    orientation = Orientation.Horizontal,
+                    state = state
+                )
         }
 
         Spacer(Modifier.width(23.dp))

@@ -35,6 +35,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.PointerIcon
+import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.input.pointer.pointerMoveFilter
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
@@ -75,37 +77,17 @@ import java.awt.datatransfer.StringSelection
 fun CallView(call: CallTimeline?) {
     var selectedTab by remember { mutableStateOf(0) }
     var height by remember { mutableStateOf(200.dp) }
-    var startResize by remember { mutableStateOf(false) }
 
     Box(Modifier.fillMaxWidth()) {
         JPanelBorder(Modifier.fillMaxWidth().height(1.dp).align(Alignment.BottomStart))
-        val window = LocalWindow.current
 
         Box(
             Modifier.matchParentSize()
+                .pointerHoverIcon(PointerIcon(Cursor.getPredefinedCursor(Cursor.N_RESIZE_CURSOR)))
                 .draggable(
                     orientation = Orientation.Vertical,
                     state = rememberDraggableState { delta ->
                         height -= delta.dp
-                    },
-                    onDragStarted = {
-                        startResize = true
-                        window.cursor = Cursor.getPredefinedCursor(Cursor.N_RESIZE_CURSOR)
-                    },
-                    onDragStopped = {
-                        startResize = false
-                        window.cursor = Cursor.getDefaultCursor()
-                    }
-                ).pointerMoveFilter(
-                    onEnter = {
-                        window.cursor = Cursor.getPredefinedCursor(Cursor.N_RESIZE_CURSOR)
-                        false
-                    },
-                    onExit = {
-                        if (!startResize) {
-                            window.cursor = Cursor.getDefaultCursor()
-                        }
-                        false
                     }
                 )
         ) {}
@@ -188,7 +170,6 @@ fun StatisticsView(call: CallTimeline) {
 fun TimelineView(call: CallTimeline) {
     var selectedEvent by remember(call) { mutableStateOf<CallEvent?>(null) }
     var width by remember { mutableStateOf(200.dp) }
-    var startResize by remember { mutableStateOf(false) }
 
     Row {
         val vState = rememberScrollState()
@@ -204,32 +185,13 @@ fun TimelineView(call: CallTimeline) {
             VerticalScrollbar(rememberScrollbarAdapter(vState), Modifier.align(Alignment.CenterEnd))
         }
 
-        val window = LocalWindow.current
         JPanelBorder(
             Modifier.width(1.dp).fillMaxHeight()
+                .pointerHoverIcon(PointerIcon(Cursor.getPredefinedCursor(Cursor.W_RESIZE_CURSOR)))
                 .draggable(
                     orientation = Orientation.Horizontal,
                     state = rememberDraggableState { delta ->
                         width += delta.dp
-                    },
-                    onDragStarted = {
-                        startResize = true
-                        window.cursor = Cursor.getPredefinedCursor(Cursor.W_RESIZE_CURSOR)
-                    },
-                    onDragStopped = {
-                        startResize = false
-                        window.cursor = Cursor.getDefaultCursor()
-                    }
-                ).pointerMoveFilter(
-                    onEnter = {
-                        window.cursor = Cursor.getPredefinedCursor(Cursor.W_RESIZE_CURSOR)
-                        false
-                    },
-                    onExit = {
-                        if (!startResize) {
-                            window.cursor = Cursor.getDefaultCursor()
-                        }
-                        false
                     }
                 )
         )

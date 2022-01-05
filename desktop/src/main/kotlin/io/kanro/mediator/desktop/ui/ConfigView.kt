@@ -37,6 +37,8 @@ import androidx.compose.ui.focus.onFocusEvent
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.input.key.KeyEvent
+import androidx.compose.ui.input.pointer.PointerIcon
+import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.input.pointer.pointerMoveFilter
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.Dp
@@ -525,39 +527,18 @@ fun MetadataRowHeader(
             .background(JBTheme.panelColors.bgContent),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        var startResize by remember { mutableStateOf(false) }
         val fromState = rememberDraggableState { delta ->
             resizing(delta)
         }
-
-        val window = LocalWindow.current
 
         Box(Modifier.width(keyWidth)) {
             Text("Key", Modifier.padding(start = 7.dp))
         }
         JPanelBorder(
-            Modifier.width(1.dp).fillMaxHeight().pointerMoveFilter(
-                onEnter = {
-                    window.cursor = Cursor.getPredefinedCursor(Cursor.W_RESIZE_CURSOR)
-                    false
-                },
-                onExit = {
-                    if (!startResize) {
-                        window.cursor = Cursor.getDefaultCursor()
-                    }
-                    false
-                }
-            ).draggable(
+            Modifier.width(1.dp).fillMaxHeight().pointerHoverIcon(PointerIcon(Cursor.getPredefinedCursor(Cursor.W_RESIZE_CURSOR)))
+                .draggable(
                 orientation = Orientation.Horizontal,
-                state = fromState,
-                onDragStarted = {
-                    startResize = true
-                    window.cursor = Cursor.getPredefinedCursor(Cursor.W_RESIZE_CURSOR)
-                },
-                onDragStopped = {
-                    startResize = false
-                    window.cursor = Cursor.getDefaultCursor()
-                }
+                state = fromState
             )
         )
         Box(Modifier.width(0.dp).weight(1.0f)) {
