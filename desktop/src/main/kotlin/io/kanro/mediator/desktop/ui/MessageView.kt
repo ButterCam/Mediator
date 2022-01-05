@@ -7,7 +7,6 @@ import androidx.compose.foundation.VerticalScrollbar
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.rememberScrollState
@@ -34,7 +33,6 @@ import com.bybutter.sisyphus.protobuf.primitives.string
 import com.bybutter.sisyphus.security.base64
 import com.bybutter.sisyphus.string.toCamelCase
 import io.kanro.compose.jetbrains.JBTheme
-import io.kanro.compose.jetbrains.SelectionScope
 import io.kanro.compose.jetbrains.control.JBTreeItem
 import io.kanro.compose.jetbrains.control.JBTreeList
 import java.awt.Toolkit
@@ -98,7 +96,7 @@ internal fun RepeatedFieldView(
     val key = remember { UUID.randomUUID().toString() }
     val selected = key == selectedItem.value
     JBTreeItem(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxSize(),
         expanded = expanded,
         expanding = {
             expanded = it
@@ -109,38 +107,37 @@ internal fun RepeatedFieldView(
         },
         content = {
             FieldContextMenu(reflection, field, value) {
-                Row(Modifier.fillMaxHeight(), verticalAlignment = Alignment.CenterVertically) {
-                    SelectionScope(selected) {
-                        Label(field.name)
-                        when (value) {
-                            is List<*> -> {
-                                val type =
-                                    field.typeName.substringAfterLast('.').takeIf { it.isNotEmpty() }
-                                        ?: field.type.toString()
-                                            .toCamelCase()
-                                Label(": $type[]", color = JBTheme.textColors.infoInput)
-                            }
-                            is Map<*, *> -> {
-                                val entry = reflection.findMapEntryDescriptor(field.typeName)
-                                val keyField = entry?.field?.firstOrNull { it.number == 1 }
-                                val valueField = entry?.field?.firstOrNull { it.number == 2 }
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Label(field.name)
+                    when (value) {
+                        is List<*> -> {
+                            val type =
+                                field.typeName.substringAfterLast('.').takeIf { it.isNotEmpty() }
+                                    ?: field.type.toString()
+                                        .toCamelCase()
+                            Label(": $type[]", color = JBTheme.textColors.infoInput)
+                        }
+                        is Map<*, *> -> {
+                            val entry = reflection.findMapEntryDescriptor(field.typeName)
+                            val keyField = entry?.field?.firstOrNull { it.number == 1 }
+                            val valueField = entry?.field?.firstOrNull { it.number == 2 }
 
-                                val keyType = keyField?.typeName?.substringAfterLast('.')?.takeIf { it.isNotEmpty() }
-                                    ?: keyField?.type?.toString()?.toCamelCase()
-                                val valueType =
-                                    valueField?.typeName?.substringAfterLast('.')?.takeIf { it.isNotEmpty() }
-                                        ?: valueField?.type?.toString()?.toCamelCase()
+                            val keyType = keyField?.typeName?.substringAfterLast('.')?.takeIf { it.isNotEmpty() }
+                                ?: keyField?.type?.toString()?.toCamelCase()
+                            val valueType =
+                                valueField?.typeName?.substringAfterLast('.')?.takeIf { it.isNotEmpty() }
+                                    ?: valueField?.type?.toString()?.toCamelCase()
 
-                                Label(
-                                    ": map<${keyType ?: "?"}, ${valueType ?: "?"}>",
-                                    color = JBTheme.textColors.infoInput
-                                )
-                            }
+                            Label(
+                                ": map<${keyType ?: "?"}, ${valueType ?: "?"}>",
+                                color = JBTheme.textColors.infoInput
+                            )
                         }
                     }
                 }
             }
-        }) {
+        }
+    ) {
         when (value) {
             is List<*> -> {
                 value.forEachIndexed { index, any ->
@@ -185,14 +182,14 @@ internal fun SimpleFieldView(
             MessageFieldView(modifier, selectedItem, reflection, field, prefix, value as Message<*, *>)
         }
         FieldDescriptorProto.Type.ENUM -> JBTreeItem(
-            modifier.fillMaxWidth(),
+            modifier.fillMaxSize(),
             selected = selected,
             onClick = {
                 selectedItem.value = key
             }
         ) {
             FieldContextMenu(reflection, field, value) {
-                Row(Modifier.fillMaxHeight(), verticalAlignment = Alignment.CenterVertically) {
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     Label(prefix ?: field.name)
                     Label(": ${field.typeName.substringAfterLast('.')}", color = JBTheme.textColors.infoInput)
                     Label(" = $value")
@@ -201,14 +198,14 @@ internal fun SimpleFieldView(
             }
         }
         FieldDescriptorProto.Type.BYTES -> JBTreeItem(
-            modifier.fillMaxWidth(),
+            modifier.fillMaxSize(),
             selected = selected,
             onClick = {
                 selectedItem.value = key
             }
         ) {
             FieldContextMenu(reflection, field, value) {
-                Row(Modifier.fillMaxHeight(), verticalAlignment = Alignment.CenterVertically) {
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     Label(prefix ?: field.name)
                     Label(": bytes", color = JBTheme.textColors.infoInput)
                     Label(" = ${(value as ByteArray).base64()}")
@@ -216,14 +213,14 @@ internal fun SimpleFieldView(
             }
         }
         FieldDescriptorProto.Type.STRING -> JBTreeItem(
-            modifier.fillMaxWidth(),
+            modifier.fillMaxSize(),
             selected = selected,
             onClick = {
                 selectedItem.value = key
             }
         ) {
             FieldContextMenu(reflection, field, value) {
-                Row(Modifier.fillMaxHeight(), verticalAlignment = Alignment.CenterVertically) {
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     Label(prefix ?: field.name)
                     Label(": string", color = JBTheme.textColors.infoInput)
                     Label(" = ${value?.toJson()}")
@@ -231,14 +228,14 @@ internal fun SimpleFieldView(
             }
         }
         else -> JBTreeItem(
-            modifier.fillMaxWidth(),
+            modifier.fillMaxSize(),
             selected = selected,
             onClick = {
                 selectedItem.value = key
             }
         ) {
             FieldContextMenu(reflection, field, value) {
-                Row(Modifier.fillMaxHeight(), verticalAlignment = Alignment.CenterVertically) {
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     Label(prefix ?: field.name)
                     Label(": ${field.type.toString().toCamelCase()}", color = JBTheme.textColors.infoInput)
                     Label(" = $value")
@@ -302,7 +299,7 @@ internal fun MessageFieldView(
     val selected = key == selectedItem.value
 
     JBTreeItem(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxSize(),
         expanded = expanded,
         expanding = {
             expanded = it
@@ -313,14 +310,12 @@ internal fun MessageFieldView(
         },
         content = {
             FieldContextMenu(reflection, field, message) {
-                Row(Modifier.fillMaxHeight(), verticalAlignment = Alignment.CenterVertically) {
-                    SelectionScope(selected) {
-                        Label(prefix ?: field.name)
-                        Label(": ${field.typeName.substringAfterLast('.')}", color = JBTheme.textColors.infoInput)
-                        when (message) {
-                            is Timestamp -> Label(" = ${message.string()}", color = JBTheme.textColors.infoInput)
-                            is Duration -> Label(" = ${message.string()}", color = JBTheme.textColors.infoInput)
-                        }
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Label(prefix ?: field.name)
+                    Label(": ${message.type().substringAfterLast('.')}", color = JBTheme.textColors.infoInput)
+                    when (message) {
+                        is Timestamp -> Label(" = ${message.string()}", color = JBTheme.textColors.infoInput)
+                        is Duration -> Label(" = ${message.string()}", color = JBTheme.textColors.infoInput)
                     }
                 }
             }

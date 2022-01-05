@@ -34,22 +34,24 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.awt.awtEvent
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.PointerEvent
-import androidx.compose.ui.input.pointer.changedToUp
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.pointerMoveFilter
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.bybutter.sisyphus.jackson.toJson
+import com.bybutter.sisyphus.protobuf.ProtoReflection
 import com.bybutter.sisyphus.protobuf.invoke
+import com.bybutter.sisyphus.protobuf.primitives.FieldDescriptorProto
 import com.bybutter.sisyphus.protobuf.primitives.string
+import com.bybutter.sisyphus.rpc.Code
+import com.bybutter.sisyphus.rpc.Status
+import com.bybutter.sisyphus.string.toUpperSpaceCase
 import io.grpc.Metadata
 import io.kanro.compose.jetbrains.JBTheme
 import io.kanro.compose.jetbrains.SelectionScope
 import io.kanro.compose.jetbrains.control.Icon
+import io.kanro.compose.jetbrains.control.JBTreeItem
+import io.kanro.compose.jetbrains.control.JBTreeList
 import io.kanro.compose.jetbrains.control.JPanelBorder
 import io.kanro.compose.jetbrains.control.ListItemHoverIndication
 import io.kanro.compose.jetbrains.control.ProgressBar
@@ -67,7 +69,6 @@ import kotlinx.coroutines.withContext
 import java.awt.Cursor
 import java.awt.Toolkit
 import java.awt.datatransfer.StringSelection
-import java.awt.event.MouseEvent
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
@@ -81,33 +82,33 @@ fun CallView(call: CallTimeline?) {
         val window = LocalWindow.current
 
         Box(
-            Modifier.matchParentSize().draggable(
-                orientation = Orientation.Vertical,
-                state = rememberDraggableState { delta ->
-                    height -= delta.dp
-                },
-                onDragStarted = {
-                    startResize = true
-                    window.cursor = Cursor.getPredefinedCursor(Cursor.N_RESIZE_CURSOR)
-                },
-                onDragStopped = {
-                    startResize = false
-                    window.cursor = Cursor.getDefaultCursor()
-                }
-            ).pointerMoveFilter(
-                onEnter = {
-                    window.cursor = Cursor.getPredefinedCursor(Cursor.N_RESIZE_CURSOR)
-                    false
-                },
-                onExit = {
-                    if (!startResize) {
+            Modifier.matchParentSize()
+                .draggable(
+                    orientation = Orientation.Vertical,
+                    state = rememberDraggableState { delta ->
+                        height -= delta.dp
+                    },
+                    onDragStarted = {
+                        startResize = true
+                        window.cursor = Cursor.getPredefinedCursor(Cursor.N_RESIZE_CURSOR)
+                    },
+                    onDragStopped = {
+                        startResize = false
                         window.cursor = Cursor.getDefaultCursor()
                     }
-                    false
-                }
-            )
-        ) {
-        }
+                ).pointerMoveFilter(
+                    onEnter = {
+                        window.cursor = Cursor.getPredefinedCursor(Cursor.N_RESIZE_CURSOR)
+                        false
+                    },
+                    onExit = {
+                        if (!startResize) {
+                            window.cursor = Cursor.getDefaultCursor()
+                        }
+                        false
+                    }
+                )
+        ) {}
         Row(Modifier.fillMaxWidth().align(Alignment.CenterStart)) {
             Tab(
                 selectedTab == 0,
@@ -205,31 +206,32 @@ fun TimelineView(call: CallTimeline) {
 
         val window = LocalWindow.current
         JPanelBorder(
-            Modifier.width(1.dp).fillMaxHeight().draggable(
-                orientation = Orientation.Horizontal,
-                state = rememberDraggableState { delta ->
-                    width += delta.dp
-                },
-                onDragStarted = {
-                    startResize = true
-                    window.cursor = Cursor.getPredefinedCursor(Cursor.W_RESIZE_CURSOR)
-                },
-                onDragStopped = {
-                    startResize = false
-                    window.cursor = Cursor.getDefaultCursor()
-                }
-            ).pointerMoveFilter(
-                onEnter = {
-                    window.cursor = Cursor.getPredefinedCursor(Cursor.W_RESIZE_CURSOR)
-                    false
-                },
-                onExit = {
-                    if (!startResize) {
+            Modifier.width(1.dp).fillMaxHeight()
+                .draggable(
+                    orientation = Orientation.Horizontal,
+                    state = rememberDraggableState { delta ->
+                        width += delta.dp
+                    },
+                    onDragStarted = {
+                        startResize = true
+                        window.cursor = Cursor.getPredefinedCursor(Cursor.W_RESIZE_CURSOR)
+                    },
+                    onDragStopped = {
+                        startResize = false
                         window.cursor = Cursor.getDefaultCursor()
                     }
-                    false
-                }
-            )
+                ).pointerMoveFilter(
+                    onEnter = {
+                        window.cursor = Cursor.getPredefinedCursor(Cursor.W_RESIZE_CURSOR)
+                        false
+                    },
+                    onExit = {
+                        if (!startResize) {
+                            window.cursor = Cursor.getDefaultCursor()
+                        }
+                        false
+                    }
+                )
         )
 
         Box {
@@ -323,24 +325,19 @@ fun TimelineItemRow(
     }) {
         SelectionScope(selected) {
             Row(
-                modifier = Modifier
-                    .height(23.dp)
-                    .fillMaxWidth()
-                    .selectable(
-                        selected = selected,
-                        interactionSource = interactionSource,
-                        indication = ListItemHoverIndication,
-                        onClick = onClick,
-                        role = role
-                    )
-                    .run {
-                        if (selected) {
-                            background(color = JBTheme.selectionColors.active)
-                        } else {
-                            this
-                        }
+                modifier = Modifier.height(23.dp).fillMaxWidth().selectable(
+                    selected = selected,
+                    interactionSource = interactionSource,
+                    indication = ListItemHoverIndication,
+                    onClick = onClick,
+                    role = role
+                ).run {
+                    if (selected) {
+                        background(color = JBTheme.selectionColors.active)
+                    } else {
+                        this
                     }
-                    .hoverable(rememberCoroutineScope(), interactionSource),
+                }.hoverable(rememberCoroutineScope(), interactionSource),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 val icon = when (event) {
@@ -433,17 +430,32 @@ fun EventView(call: CallTimeline, event: CallEvent) {
 
 @Composable
 fun MetadataView(metadata: Metadata, modifier: Modifier = Modifier) {
-    Column(modifier.background(Color.White).fillMaxSize()) {
-        var selectedKey by remember(metadata) { mutableStateOf("") }
+    Box(Modifier.background(JBTheme.panelColors.bgContent).fillMaxSize()) {
+        val vState = rememberScrollState()
+        JBTreeList(modifier.verticalScroll(vState)) {
+            val selectedKey = remember(metadata) { mutableStateOf("") }
 
-        metadata.keys().forEach {
-            if (it.endsWith("-bin")) return@forEach
-            MetadataItem(
-                it,
-                metadata[Metadata.Key.of(it, Metadata.ASCII_STRING_MARSHALLER)] ?: "",
-                selectedKey == it
-            ) {
-                selectedKey = it
+            metadata.keys().forEach {
+                val key = it.lowercase()
+                if (key.endsWith("-bin")) {
+                    val value = metadata[Metadata.Key.of(it, Metadata.BINARY_BYTE_MARSHALLER)] ?: byteArrayOf()
+                    MessageFieldView(
+                        Modifier, selectedKey, ProtoReflection.current(),
+                        FieldDescriptorProto {
+                            this.type = FieldDescriptorProto.Type.MESSAGE
+                            this.name = "status"
+                            this.typeName = Status.name
+                        },
+                        it, Status.parse(value)
+                    )
+                } else {
+                    val value = metadata[Metadata.Key.of(it, Metadata.ASCII_STRING_MARSHALLER)] ?: ""
+                    MetadataItem(
+                        it, value, selectedKey.value == it
+                    ) {
+                        selectedKey.value = it
+                    }
+                }
             }
         }
     }
@@ -455,26 +467,9 @@ fun MetadataItem(
     key: String,
     value: String,
     selected: Boolean,
-    interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
     onClick: () -> Unit
 ) {
-    Box(
-        Modifier.fillMaxWidth()
-            .selectable(
-                selected = selected,
-                interactionSource = interactionSource,
-                indication = ListItemHoverIndication,
-                onClick = onClick,
-                role = null
-            ).run {
-                if (selected) {
-                    background(color = JBTheme.selectionColors.active)
-                } else {
-                    this
-                }
-            }
-            .hoverable(rememberCoroutineScope(), interactionSource)
-    ) {
+    JBTreeItem(modifier = Modifier.fillMaxWidth(), selected = selected, onClick = onClick) {
         ContextMenuArea({
             val result = mutableListOf<ContextMenuItem>()
             result += ContextMenuItem("Copy") {
@@ -488,25 +483,15 @@ fun MetadataItem(
             }
             result
         }) {
-            SelectionScope(selected) {
-                Row(
-                    Modifier.height(23.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Box(
-                        Modifier.padding(horizontal = 7.dp).weight(1f),
-                    ) {
-                        Label(
-                            text = key,
-                            modifier = Modifier.align(Alignment.CenterEnd),
-                            color = JBTheme.textColors.infoInput,
-                            style = JBTheme.typography.defaultBold
-                        )
+            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Label(key)
+                Label(" = ", color = JBTheme.textColors.infoInput)
+                Label(value)
+                if (key.lowercase() == "grpc-status") {
+                    val code = Code.fromNumber(value.toInt())
+                    if (code != null) {
+                        Label(" (${code.name.toUpperSpaceCase()})", color = JBTheme.textColors.infoInput)
                     }
-                    Label(
-                        value,
-                        Modifier.weight(3f),
-                    )
                 }
             }
         }

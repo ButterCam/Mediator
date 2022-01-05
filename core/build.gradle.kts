@@ -13,8 +13,8 @@ protobuf {
 dependencies {
     api("io.grpc:grpc-core:1.42.1")
     api("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.6.0")
-    api("com.bybutter.sisyphus:sisyphus-grpc-coroutine:1.3.34")
-    api("com.bybutter.sisyphus:sisyphus-jackson-protobuf:1.3.34")
+    api("com.bybutter.sisyphus:sisyphus-grpc-coroutine:1.3.35")
+    api("com.bybutter.sisyphus:sisyphus-jackson-protobuf:1.3.35")
     api("io.grpc:grpc-netty:1.42.1")
     api("io.netty:netty-handler-proxy:4.1.72.Final")
 
