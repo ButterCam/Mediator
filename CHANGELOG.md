@@ -1,6 +1,8 @@
 # Changelog
 
 ## [Unreleased]
+
+## [1.1.2]
 - Support resolve any
 - Support show status details
 - Fix JBTree item without children
