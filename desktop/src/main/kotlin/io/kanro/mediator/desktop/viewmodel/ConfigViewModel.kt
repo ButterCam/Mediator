@@ -8,7 +8,8 @@ import io.kanro.mediator.desktop.model.MediatorConfiguration
 class ConfigViewModel(
     proxyPort: Int,
     grpcPort: Int,
-    serverRules: List<ServerRuleViewModel>
+    serverRules: List<ServerRuleViewModel>,
+    requestRules: List<RequestRuleViewModel>
 ) {
     val proxyPort = mutableStateOf(proxyPort.toString(), policy = neverEqualPolicy())
 
@@ -16,15 +17,16 @@ class ConfigViewModel(
 
     val changed = mutableStateOf(false)
 
-    val requiredRestartServer = mutableStateOf(false)
-
     val serverRules = serverRules.toMutableStateList()
 
-    fun serialization(): MediatorConfiguration {
+    val requestRules = requestRules.toMutableStateList()
+
+    fun serialize(): MediatorConfiguration {
         return MediatorConfiguration(
             proxyPort.value.toInt(),
             grpcPort.value.toInt(),
-            serverRules.filter { it.regex.value.isNotEmpty() }.map { it.serialization() }
+            serverRules.filter { it.regex.value.isNotEmpty() }.map { it.serialize() },
+            requestRules.map { it.serialize() }
         )
     }
 }

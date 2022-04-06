@@ -119,7 +119,7 @@ fun FilterBox(vm: MainViewModel, modifier: Modifier = Modifier) {
                         ConfigDialog(
                             vm.configView(),
                             {
-                                vm.configuration = it.serialization().also {
+                                vm.configuration = it.serialize().also {
                                     it.save()
                                 }
                                 vm.serverManager?.stop()

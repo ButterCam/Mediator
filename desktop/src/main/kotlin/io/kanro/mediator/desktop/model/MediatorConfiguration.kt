@@ -12,7 +12,8 @@ import kotlin.io.path.writeText
 data class MediatorConfiguration(
     val proxyPort: Int = 8888,
     val grpcPort: Int = 9999,
-    val serverRules: List<ServerRule> = listOf()
+    val serverRules: List<ServerRule> = listOf(),
+    val requestRules: List<RequestRule> = listOf(),
 ) {
     companion object {
         private val configDir = Path(
@@ -44,5 +45,20 @@ data class ServerRule(
     val authority: Regex,
     val replaceEnabled: Boolean = true,
     val replace: String,
+    val metadata: Map<String, String>,
+)
+
+data class RequestRule(
+    val name: String,
+    val enabled: Boolean,
+    val method: String,
+    val inputPatchers: List<RequestPatcher>,
+    val outputPatchers: List<RequestPatcher>,
+)
+
+data class RequestPatcher(
+    val enabled: Boolean,
+    val body: String,
+    val removedFields: List<String>,
     val metadata: Map<String, String>,
 )

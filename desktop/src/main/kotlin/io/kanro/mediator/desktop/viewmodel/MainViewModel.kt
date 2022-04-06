@@ -27,6 +27,9 @@ class MainViewModel {
             configuration.grpcPort,
             configuration.serverRules.map {
                 ServerRuleViewModel(it)
+            },
+            configuration.requestRules.map {
+                RequestRuleViewModel(it)
             }
         )
     }
