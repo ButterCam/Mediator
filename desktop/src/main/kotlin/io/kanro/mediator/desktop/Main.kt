@@ -26,15 +26,13 @@ import kotlin.system.exitProcess
 
 fun main() {
     application {
-        val vm = remember { MainViewModel() }
-
         Window(
             title = "Mediator",
             state = rememberWindowState(),
             onCloseRequest = {
-                vm.recoding.value = false
-                vm.serverManager?.stop()
-                vm.serverManager = null
+                MainViewModel.recoding.value = false
+                MainViewModel.serverManager?.stop()
+                MainViewModel.serverManager = null
                 exitApplication()
                 exitProcess(0)
             }
@@ -42,15 +40,13 @@ fun main() {
 
             CompositionLocalProvider(
                 LocalWindow provides window,
-                LocalMainViewModel provides vm
             ) {
                 JBTheme {
                     JPanel(Modifier.fillMaxSize().jBorder(top = 1.dp, color = JBTheme.panelColors.border)) {
                         Column {
-                            CallList(vm, Modifier.fillMaxWidth().height(0.dp).weight(1f))
-                            FilterBox(vm, Modifier.jBorder(vertical = 1.dp, color = JBTheme.panelColors.border))
-                            val call by vm.selectedCall
-                            CallView(call)
+                            CallList(Modifier.fillMaxWidth().height(0.dp).weight(1f))
+                            FilterBox(Modifier.jBorder(vertical = 1.dp, color = JBTheme.panelColors.border))
+                            CallView(MainViewModel.selectedCall.value)
                         }
                     }
                 }
@@ -61,8 +57,4 @@ fun main() {
 
 val LocalWindow: ProvidableCompositionLocal<Window> = compositionLocalOf {
     error("CompositionLocal LocalWindow not provided")
-}
-
-val LocalMainViewModel: ProvidableCompositionLocal<MainViewModel> = compositionLocalOf {
-    error("CompositionLocal MainViewModel not provided")
 }

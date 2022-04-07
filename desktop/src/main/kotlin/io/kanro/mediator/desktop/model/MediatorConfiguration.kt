@@ -2,6 +2,13 @@ package io.kanro.mediator.desktop.model
 
 import com.bybutter.sisyphus.jackson.parseJson
 import com.bybutter.sisyphus.jackson.toJson
+import com.github.fge.jackson.jsonpointer.JsonPointer
+import com.github.fge.jsonpatch.AddOperation
+import com.github.fge.jsonpatch.CopyOperation
+import com.github.fge.jsonpatch.JsonPatch
+import com.github.fge.jsonpatch.MoveOperation
+import com.github.fge.jsonpatch.RemoveOperation
+import com.github.fge.jsonpatch.ReplaceOperation
 import net.harawata.appdirs.AppDirsFactory
 import kotlin.io.path.Path
 import kotlin.io.path.createDirectories
@@ -12,7 +19,8 @@ import kotlin.io.path.writeText
 data class MediatorConfiguration(
     val proxyPort: Int = 8888,
     val grpcPort: Int = 9999,
-    val serverRules: List<ServerRule> = listOf()
+    val serverRules: List<ServerRule> = listOf(),
+    val requestRules: List<RequestRule> = listOf(),
 ) {
     companion object {
         private val configDir = Path(
@@ -46,3 +54,41 @@ data class ServerRule(
     val replace: String,
     val metadata: Map<String, String>,
 )
+
+data class RequestRule(
+    val name: String,
+    val enabled: Boolean,
+    val method: String,
+    val type: Type,
+    val op: Operation,
+    val path: String,
+    val value: String,
+) {
+    enum class Type {
+        REQUEST_METADATA,
+        INPUT,
+        RESPONSE_METADATA,
+        OUTPUT,
+        TRAILER,
+    }
+
+    enum class Operation {
+        ADD, REMOVE, REPLACE, COPY, MOVE, TEST
+    }
+
+    private val patch: JsonPatch by lazy {
+        val operation = when (op) {
+            Operation.ADD -> AddOperation(JsonPointer(path), value.parseJson())
+            Operation.REMOVE -> RemoveOperation(JsonPointer(path))
+            Operation.REPLACE -> ReplaceOperation(JsonPointer(path), value.parseJson())
+            Operation.COPY -> CopyOperation(JsonPointer(path), JsonPointer(value))
+            Operation.MOVE -> MoveOperation(JsonPointer(path), JsonPointer(value))
+            Operation.TEST -> ReplaceOperation(JsonPointer(path), value.parseJson())
+        }
+        JsonPatch(listOf(operation))
+    }
+
+    fun toPatch(): JsonPatch {
+        return patch
+    }
+}

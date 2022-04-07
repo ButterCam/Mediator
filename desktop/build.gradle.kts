@@ -11,21 +11,20 @@ plugins {
 repositories {
     mavenLocal()
     mavenCentral()
-    maven { url = uri("https://maven.pkg.jetbrains.space/public/p/compose/dev") }
+    maven("https://maven.pkg.jetbrains.space/public/p/compose/dev")
 }
 
 dependencies {
     implementation(project(":core"))
-    implementation("com.bybutter.compose:compose-jetbrains-theme:1.0.1")
+    implementation("com.bybutter.compose:compose-jetbrains-theme:1.0.2")
     implementation("org.jetbrains.kotlin:kotlin-reflect:1.6.10")
     testImplementation(kotlin("test-junit5"))
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.7.2")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.7.2")
     implementation("net.harawata:appdirs:1.2.1")
+    implementation("com.github.java-json-tools:json-patch:1.13")
 
-    implementation(compose.desktop.currentOs) {
-        exclude("org.jetbrains.compose.material")
-    }
+    implementation(compose.desktop.currentOs)
     implementation(compose.uiTooling)
 }
 

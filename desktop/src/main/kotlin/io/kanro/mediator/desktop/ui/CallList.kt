@@ -7,6 +7,7 @@ import androidx.compose.foundation.gestures.DraggableState
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.draggable
 import androidx.compose.foundation.gestures.rememberDraggableState
+import androidx.compose.foundation.hoverable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -49,7 +50,6 @@ import io.kanro.compose.jetbrains.control.JPanelBorder
 import io.kanro.compose.jetbrains.control.ListItemHoverIndication
 import io.kanro.compose.jetbrains.control.Text
 import io.kanro.compose.jetbrains.control.jBorder
-import io.kanro.compose.jetbrains.interaction.hoverable
 import io.kanro.mediator.desktop.model.CallTimeline
 import io.kanro.mediator.desktop.model.asState
 import io.kanro.mediator.desktop.viewmodel.MainViewModel
@@ -58,11 +58,11 @@ import java.util.concurrent.TimeUnit
 
 @Composable
 @OptIn(ExperimentalFoundationApi::class)
-fun CallList(viewModel: MainViewModel, modifier: Modifier = Modifier) {
+fun CallList(modifier: Modifier = Modifier) {
     Box(modifier = modifier) {
         val listState = rememberLazyListState()
-        val calls = viewModel.shownCalls
-        var selected by viewModel.selectedCall
+        val calls = MainViewModel.shownCalls
+        var selected by MainViewModel.selectedCall
         var requestToEnd by remember { mutableStateOf(false) }
 
         var idWidth by remember { mutableStateOf(50.dp) }
@@ -215,7 +215,7 @@ fun CallRow(
                         this
                     }
                 }
-                .hoverable(rememberCoroutineScope(), interactionSource)
+                .hoverable(interactionSource)
                 .jBorder(bottom = 1.dp, color = JBTheme.panelColors.border),
             verticalAlignment = Alignment.CenterVertically
         ) {

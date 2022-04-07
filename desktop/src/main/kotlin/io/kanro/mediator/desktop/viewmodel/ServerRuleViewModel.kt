@@ -35,7 +35,7 @@ class ServerRuleViewModel(
         MetadataEntry(it.key, it.value)
     }.toMutableStateList()
 
-    fun serialization(): ServerRule {
+    fun serialize(): ServerRule {
         return ServerRule(
             name.value,
             enabled.value,

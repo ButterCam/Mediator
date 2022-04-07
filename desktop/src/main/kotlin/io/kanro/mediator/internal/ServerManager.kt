@@ -17,7 +17,7 @@ class ServerManager(vm: MainViewModel, private val config: MediatorConfiguration
     private var state = 0
 
     private val server: Server = ServerBuilder.forPort(config.grpcPort)
-        .intercept(GrpcCallLogger(vm))
+        .intercept(GrpcCallLogger())
         .fallbackHandlerRegistry(MediatorRegistry(this))
         .build()
 
