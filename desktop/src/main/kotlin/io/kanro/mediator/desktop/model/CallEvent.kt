@@ -15,7 +15,7 @@ sealed interface CallEvent : ChangedInteraction {
         val authority: String,
         val method: String,
         val methodType: MethodType,
-        val header: Metadata,
+        val header: Metadata
     ) : CallEvent {
         private val timestamp = Timestamp.now()
 
@@ -60,10 +60,10 @@ sealed interface CallEvent : ChangedInteraction {
     }
 
     class Input(
-        val message: ByteArray
+        val message: ByteArray,
+        private var parsedMessage: Message<*, *>? = null
     ) : CallEvent {
         private val timestamp = Timestamp.now()
-        private var parsedMessage: Message<*, *>? = null
 
         override fun timestamp() = timestamp
 
@@ -73,6 +73,10 @@ sealed interface CallEvent : ChangedInteraction {
 
         fun message(): Message<*, *> {
             return parsedMessage ?: throw IllegalStateException("Unresolved")
+        }
+
+        fun messageOrNull(): Message<*, *>? {
+            return parsedMessage
         }
 
         override fun resolve(timeline: CallTimeline): Boolean {
@@ -88,13 +92,17 @@ sealed interface CallEvent : ChangedInteraction {
     }
 
     class Output(
-        val message: ByteArray
+        val message: ByteArray,
+        private var parsedMessage: Message<*, *>? = null
     ) : CallEvent {
         private val timestamp = Timestamp.now()
-        private var parsedMessage: Message<*, *>? = null
 
         fun message(): Message<*, *> {
             return parsedMessage ?: throw IllegalStateException("Unresolved")
+        }
+
+        fun messageOrNull(): Message<*, *>? {
+            return parsedMessage
         }
 
         override fun resolved(): Boolean {

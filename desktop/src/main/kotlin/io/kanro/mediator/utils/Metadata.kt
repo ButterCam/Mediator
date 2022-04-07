@@ -14,8 +14,8 @@ fun Metadata.toMap(): Map<String, String?> {
     }
 }
 
-fun Metadata.applyMap(data: Map<String, String?>) {
-    return data.forEach { (k, v) ->
+fun Metadata.applyMap(data: Map<String, String?>): Metadata {
+    data.forEach { (k, v) ->
         if (v == null) return@forEach
         if (k.endsWith("-bin")) {
             this.put(Metadata.Key.of(k, Metadata.BINARY_BYTE_MARSHALLER), v.base64Decode())
@@ -23,4 +23,5 @@ fun Metadata.applyMap(data: Map<String, String?>) {
             this.put(Metadata.Key.of(k, Metadata.ASCII_STRING_MARSHALLER), v)
         }
     }
+    return this
 }

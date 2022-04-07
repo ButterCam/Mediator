@@ -3,6 +3,7 @@ package io.kanro.mediator.desktop.ui
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -31,7 +32,6 @@ import io.kanro.compose.jetbrains.control.JBToolBar
 import io.kanro.compose.jetbrains.control.TextField
 import io.kanro.compose.jetbrains.control.TextFieldDefaults
 import io.kanro.compose.jetbrains.control.jBorder
-import io.kanro.compose.jetbrains.interaction.collectIsHoverAsState
 import io.kanro.mediator.desktop.viewmodel.MainViewModel
 import io.kanro.mediator.internal.ServerManager
 import java.io.IOException
@@ -39,11 +39,11 @@ import java.net.BindException
 
 @Composable
 @OptIn(ExperimentalComposeUiApi::class)
-fun FilterBox(vm: MainViewModel, modifier: Modifier = Modifier) {
+fun FilterBox(modifier: Modifier = Modifier) {
     Row(modifier.height(28.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-        var filter by vm.filter
-        val calls = vm.calls
-        val shownCalls = vm.shownCalls
+        var filter by MainViewModel.filter
+        val calls = MainViewModel.calls
+        val shownCalls = MainViewModel.shownCalls
 
         TextField(
             value = filter,
@@ -77,16 +77,16 @@ fun FilterBox(vm: MainViewModel, modifier: Modifier = Modifier) {
             )
         )
         Box(Modifier.width(0.dp).weight(1f), contentAlignment = Alignment.CenterEnd) {
-            JBToolBar(Orientation.Horizontal, Modifier.padding(end = 7.dp)) {
+            JBToolBar(Orientation.Horizontal, modifier = Modifier.padding(end = 7.dp)) {
                 var configWindow by remember { mutableStateOf(false) }
 
                 ActionButton({
-                    if (vm.recoding.value) {
-                        vm.recoding.value = false
+                    if (MainViewModel.recoding.value) {
+                        MainViewModel.recoding.value = false
                     } else {
-                        if (vm.serverManager == null) {
-                            vm.serverManager = try {
-                                ServerManager(vm, vm.configuration).run()
+                        if (MainViewModel.serverManager == null) {
+                            MainViewModel.serverManager = try {
+                                ServerManager(MainViewModel, MainViewModel.configuration).run()
                             } catch (e: IOException) {
                                 when (val cause = e.cause) {
                                     is BindException -> {
@@ -96,10 +96,10 @@ fun FilterBox(vm: MainViewModel, modifier: Modifier = Modifier) {
                                 }
                             }
                         }
-                        vm.recoding.value = true
+                        MainViewModel.recoding.value = true
                     }
                 }) {
-                    if (vm.recoding.value) {
+                    if (MainViewModel.recoding.value) {
                         Icon("icons/suspend.svg", "Stop server")
                     } else {
                         Icon("icons/run.svg", "Start server")
@@ -117,14 +117,15 @@ fun FilterBox(vm: MainViewModel, modifier: Modifier = Modifier) {
                     Icon("icons/editorconfig.svg", "Configuration")
                     if (configWindow) {
                         ConfigDialog(
-                            vm.configView(),
+                            MainViewModel.configView(),
                             {
-                                vm.configuration = it.serialize().also {
+                                MainViewModel.configuration = it.serialize().also {
                                     it.save()
                                 }
-                                vm.serverManager?.stop()
-                                vm.serverManager = null
-                                vm.serverManager = ServerManager(vm, vm.configuration).run()
+                                MainViewModel.serverManager?.stop()
+                                MainViewModel.serverManager = null
+                                MainViewModel.serverManager =
+                                    ServerManager(MainViewModel, MainViewModel.configuration).run()
                             },
                             {
                                 configWindow = false
@@ -159,7 +160,7 @@ fun ClearButton(
         border = border,
         contentPadding = contentPadding
     ) {
-        val hovering by interactionSource.collectIsHoverAsState()
+        val hovering by interactionSource.collectIsHoveredAsState()
         if (hovering) {
             Icon("icons/deleteTagHover.svg")
         } else {

@@ -1,6 +1,5 @@
 package io.kanro.mediator.desktop.ui
 
-import androidx.compose.foundation.ContextMenuArea
 import androidx.compose.foundation.ContextMenuItem
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.VerticalScrollbar
@@ -33,6 +32,7 @@ import com.bybutter.sisyphus.protobuf.primitives.string
 import com.bybutter.sisyphus.security.base64
 import com.bybutter.sisyphus.string.toCamelCase
 import io.kanro.compose.jetbrains.JBTheme
+import io.kanro.compose.jetbrains.control.ContextMenuArea
 import io.kanro.compose.jetbrains.control.JBTreeItem
 import io.kanro.compose.jetbrains.control.JBTreeList
 import java.awt.Toolkit
@@ -95,18 +95,19 @@ internal fun RepeatedFieldView(
     var expanded by remember { mutableStateOf(false) }
     val key = remember { UUID.randomUUID().toString() }
     val selected = key == selectedItem.value
-    JBTreeItem(
-        modifier = modifier.fillMaxSize(),
-        expanded = expanded,
-        expanding = {
-            expanded = it
-        },
-        selected = selected,
-        onClick = {
-            selectedItem.value = key
-        },
-        content = {
-            FieldContextMenu(reflection, field, value) {
+
+    FieldContextMenu(reflection, field, value) {
+        JBTreeItem(
+            modifier = modifier.fillMaxSize(),
+            expanded = expanded,
+            expanding = {
+                expanded = it
+            },
+            selected = selected,
+            onClick = {
+                selectedItem.value = key
+            },
+            content = {
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     Label(field.name)
                     when (value) {
@@ -134,31 +135,32 @@ internal fun RepeatedFieldView(
                             )
                         }
                     }
+
                 }
             }
-        }
-    ) {
-        when (value) {
-            is List<*> -> {
-                value.forEachIndexed { index, any ->
-                    SimpleFieldView(Modifier, selectedItem, reflection, field, index.toString(), any)
-                }
-            }
-            is Map<*, *> -> {
-                val valueField =
-                    reflection.findMapEntryDescriptor(field.typeName)?.field?.firstOrNull { it.number == 2 }
-                if (valueField != null) {
-                    value.forEach { (key, any) ->
-                        SimpleFieldView(Modifier, selectedItem, reflection, valueField, key.toString(), any)
+        ) {
+            when (value) {
+                is List<*> -> {
+                    value.forEachIndexed { index, any ->
+                        SimpleFieldView(Modifier, selectedItem, reflection, field, index.toString(), any)
                     }
-                } else {
-                    JBTreeItem(
-                        selected = false,
-                        onClick = {
-                            selectedItem.value = ""
+                }
+                is Map<*, *> -> {
+                    val valueField =
+                        reflection.findMapEntryDescriptor(field.typeName)?.field?.firstOrNull { it.number == 2 }
+                    if (valueField != null) {
+                        value.forEach { (key, any) ->
+                            SimpleFieldView(Modifier, selectedItem, reflection, valueField, key.toString(), any)
                         }
-                    ) {
-                        Label("Unknown Map Field")
+                    } else {
+                        JBTreeItem(
+                            selected = false,
+                            onClick = {
+                                selectedItem.value = ""
+                            }
+                        ) {
+                            Label("Unknown Map Field")
+                        }
                     }
                 }
             }
@@ -181,60 +183,63 @@ internal fun SimpleFieldView(
         FieldDescriptorProto.Type.MESSAGE -> {
             MessageFieldView(modifier, selectedItem, reflection, field, prefix, value as Message<*, *>)
         }
-        FieldDescriptorProto.Type.ENUM -> JBTreeItem(
-            modifier.fillMaxSize(),
-            selected = selected,
-            onClick = {
-                selectedItem.value = key
-            }
-        ) {
+        FieldDescriptorProto.Type.ENUM ->
             FieldContextMenu(reflection, field, value) {
-                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    Label(prefix ?: field.name)
-                    Label(": ${field.typeName.substringAfterLast('.')}", color = JBTheme.textColors.infoInput)
-                    Label(" = $value")
-                    Label("(${(value as ProtoEnum<*>).number})", color = JBTheme.textColors.infoInput)
+                JBTreeItem(
+                    modifier.fillMaxSize(),
+                    selected = selected,
+                    onClick = {
+                        selectedItem.value = key
+                    }
+                ) {
+                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                        Label(prefix ?: field.name)
+                        Label(": ${field.typeName.substringAfterLast('.')}", color = JBTheme.textColors.infoInput)
+                        Label(" = $value")
+                        Label("(${(value as ProtoEnum<*>).number})", color = JBTheme.textColors.infoInput)
+                    }
                 }
             }
-        }
-        FieldDescriptorProto.Type.BYTES -> JBTreeItem(
-            modifier.fillMaxSize(),
-            selected = selected,
-            onClick = {
-                selectedItem.value = key
-            }
-        ) {
+        FieldDescriptorProto.Type.BYTES ->
             FieldContextMenu(reflection, field, value) {
-                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    Label(prefix ?: field.name)
-                    Label(": bytes", color = JBTheme.textColors.infoInput)
-                    Label(" = ${(value as ByteArray).base64()}")
+                JBTreeItem(
+                    modifier.fillMaxSize(),
+                    selected = selected,
+                    onClick = {
+                        selectedItem.value = key
+                    }
+                ) {
+                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                        Label(prefix ?: field.name)
+                        Label(": bytes", color = JBTheme.textColors.infoInput)
+                        Label(" = ${(value as ByteArray).base64()}")
+                    }
                 }
             }
-        }
-        FieldDescriptorProto.Type.STRING -> JBTreeItem(
-            modifier.fillMaxSize(),
-            selected = selected,
-            onClick = {
-                selectedItem.value = key
-            }
-        ) {
+        FieldDescriptorProto.Type.STRING ->
             FieldContextMenu(reflection, field, value) {
-                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    Label(prefix ?: field.name)
-                    Label(": string", color = JBTheme.textColors.infoInput)
-                    Label(" = ${value?.toJson()}")
+                JBTreeItem(
+                    modifier.fillMaxSize(),
+                    selected = selected,
+                    onClick = {
+                        selectedItem.value = key
+                    }
+                ) {
+                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                        Label(prefix ?: field.name)
+                        Label(": string", color = JBTheme.textColors.infoInput)
+                        Label(" = ${value?.toJson()}")
+                    }
                 }
             }
-        }
-        else -> JBTreeItem(
-            modifier.fillMaxSize(),
-            selected = selected,
-            onClick = {
-                selectedItem.value = key
-            }
-        ) {
-            FieldContextMenu(reflection, field, value) {
+        else -> FieldContextMenu(reflection, field, value) {
+            JBTreeItem(
+                modifier.fillMaxSize(),
+                selected = selected,
+                onClick = {
+                    selectedItem.value = key
+                }
+            ) {
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     Label(prefix ?: field.name)
                     Label(": ${field.type.toString().toCamelCase()}", color = JBTheme.textColors.infoInput)
@@ -298,18 +303,18 @@ internal fun MessageFieldView(
     val key = remember { UUID.randomUUID().toString() }
     val selected = key == selectedItem.value
 
-    JBTreeItem(
-        modifier = modifier.fillMaxSize(),
-        expanded = expanded,
-        expanding = {
-            expanded = it
-        },
-        selected = selected,
-        onClick = {
-            selectedItem.value = key
-        },
-        content = {
-            FieldContextMenu(reflection, field, message) {
+    FieldContextMenu(reflection, field, message) {
+        JBTreeItem(
+            modifier = modifier.fillMaxSize(),
+            expanded = expanded,
+            expanding = {
+                expanded = it
+            },
+            selected = selected,
+            onClick = {
+                selectedItem.value = key
+            },
+            content = {
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     Label(prefix ?: field.name)
                     Label(": ${message.type().substringAfterLast('.')}", color = JBTheme.textColors.infoInput)
@@ -319,19 +324,19 @@ internal fun MessageFieldView(
                     }
                 }
             }
-        }
-    ) {
-        val fields = reflection {
-            val fields = mutableMapOf<FieldDescriptorProto, Any?>()
-            for ((field, value) in message) {
-                if (message.has(field.number)) {
-                    fields[field] = value
+        ) {
+            val fields = reflection {
+                val fields = mutableMapOf<FieldDescriptorProto, Any?>()
+                for ((field, value) in message) {
+                    if (message.has(field.number)) {
+                        fields[field] = value
+                    }
                 }
+                fields
             }
-            fields
-        }
-        for ((field, value) in fields) {
-            FieldView(selectedItem, reflection, field, value)
+            for ((field, value) in fields) {
+                FieldView(selectedItem, reflection, field, value)
+            }
         }
     }
 }

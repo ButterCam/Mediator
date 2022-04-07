@@ -4,28 +4,21 @@ import io.grpc.ForwardingServerCall
 import io.grpc.Metadata
 import io.grpc.ServerCall
 import io.grpc.Status
-import io.kanro.mediator.desktop.model.CallEvent
 
 class GrpcLoggingCall<ReqT, RespT>(delegate: ServerCall<ReqT, RespT>) :
     ForwardingServerCall.SimpleForwardingServerCall<ReqT, RespT>(delegate) {
     override fun sendMessage(message: RespT) {
-        GrpcCallLogger.timelineKey.get().emit(
-            CallEvent.Output(message as ByteArray)
-        )
-        super.sendMessage(message)
+        val message = GrpcCallLogger.timelineKey.get().output(message as ByteArray).message
+        super.sendMessage(message as RespT)
     }
 
     override fun sendHeaders(headers: Metadata) {
-        GrpcCallLogger.timelineKey.get().emit(
-            CallEvent.Accept(headers)
-        )
-        super.sendHeaders(headers)
+        val accept = GrpcCallLogger.timelineKey.get().accept(headers)
+        super.sendHeaders(accept.header)
     }
 
     override fun close(status: Status, trailers: Metadata) {
-        GrpcCallLogger.timelineKey.get().emit(
-            CallEvent.Close(status, trailers)
-        )
-        super.close(status, trailers)
+        val close = GrpcCallLogger.timelineKey.get().close(status, trailers)
+        super.close(status, close.trails)
     }
 }

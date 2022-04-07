@@ -1,6 +1,5 @@
 package io.kanro.mediator.desktop.ui
 
-import androidx.compose.foundation.ContextMenuArea
 import androidx.compose.foundation.ContextMenuItem
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.VerticalScrollbar
@@ -8,6 +7,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.draggable
 import androidx.compose.foundation.gestures.rememberDraggableState
+import androidx.compose.foundation.hoverable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -29,7 +29,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -37,7 +36,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
-import androidx.compose.ui.input.pointer.pointerMoveFilter
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import com.bybutter.sisyphus.jackson.toJson
@@ -51,6 +49,7 @@ import com.bybutter.sisyphus.string.toUpperSpaceCase
 import io.grpc.Metadata
 import io.kanro.compose.jetbrains.JBTheme
 import io.kanro.compose.jetbrains.SelectionScope
+import io.kanro.compose.jetbrains.control.ContextMenuArea
 import io.kanro.compose.jetbrains.control.Icon
 import io.kanro.compose.jetbrains.control.JBTreeItem
 import io.kanro.compose.jetbrains.control.JBTreeList
@@ -59,15 +58,11 @@ import io.kanro.compose.jetbrains.control.ListItemHoverIndication
 import io.kanro.compose.jetbrains.control.ProgressBar
 import io.kanro.compose.jetbrains.control.Tab
 import io.kanro.compose.jetbrains.control.Text
-import io.kanro.compose.jetbrains.interaction.hoverable
-import io.kanro.mediator.desktop.LocalMainViewModel
-import io.kanro.mediator.desktop.LocalWindow
 import io.kanro.mediator.desktop.model.CallEvent
 import io.kanro.mediator.desktop.model.CallTimeline
 import io.kanro.mediator.desktop.model.asState
+import io.kanro.mediator.desktop.viewmodel.MainViewModel
 import io.kanro.mediator.utils.toMap
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import java.awt.Cursor
 import java.awt.Toolkit
 import java.awt.datatransfer.StringSelection
@@ -299,7 +294,7 @@ fun TimelineItemRow(
                     } else {
                         this
                     }
-                }.hoverable(rememberCoroutineScope(), interactionSource),
+                }.hoverable(interactionSource),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 val icon = when (event) {
@@ -349,17 +344,11 @@ fun EventView(event: CallEvent.Close) {
 fun EventView(call: CallTimeline, event: CallEvent) {
     var resolveFailed by remember { mutableStateOf(false) }
 
-    val serverManager = LocalMainViewModel.current.serverManager
+    val serverManager = MainViewModel.serverManager
     if (!event.resolved() && serverManager != null) {
         LaunchedEffect(call) {
             if (event.resolved()) return@LaunchedEffect
-            val ref = serverManager.reflection(call.start().authority)
-            withContext(Dispatchers.IO) {
-                ref.collect()
-            }
-            if (ref.resolved()) {
-                call.resolve(ref)
-            } else {
+            if (!call.resolve()) {
                 resolveFailed = true
             }
         }
@@ -431,20 +420,20 @@ fun MetadataItem(
     selected: Boolean,
     onClick: () -> Unit
 ) {
-    JBTreeItem(modifier = Modifier.fillMaxWidth(), selected = selected, onClick = onClick) {
-        ContextMenuArea({
-            val result = mutableListOf<ContextMenuItem>()
-            result += ContextMenuItem("Copy") {
-                Toolkit.getDefaultToolkit().systemClipboard.setContents(StringSelection("$key: $value"), null)
-            }
-            result += ContextMenuItem("Copy Key") {
-                Toolkit.getDefaultToolkit().systemClipboard.setContents(StringSelection(key), null)
-            }
-            result += ContextMenuItem("Copy Value") {
-                Toolkit.getDefaultToolkit().systemClipboard.setContents(StringSelection(value), null)
-            }
-            result
-        }) {
+    ContextMenuArea({
+        val result = mutableListOf<ContextMenuItem>()
+        result += ContextMenuItem("Copy") {
+            Toolkit.getDefaultToolkit().systemClipboard.setContents(StringSelection("$key: $value"), null)
+        }
+        result += ContextMenuItem("Copy Key") {
+            Toolkit.getDefaultToolkit().systemClipboard.setContents(StringSelection(key), null)
+        }
+        result += ContextMenuItem("Copy Value") {
+            Toolkit.getDefaultToolkit().systemClipboard.setContents(StringSelection(value), null)
+        }
+        result
+    }) {
+        JBTreeItem(modifier = Modifier.fillMaxWidth(), selected = selected, onClick = onClick) {
             Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Label(key)
                 Label(" = ", color = JBTheme.textColors.infoInput)

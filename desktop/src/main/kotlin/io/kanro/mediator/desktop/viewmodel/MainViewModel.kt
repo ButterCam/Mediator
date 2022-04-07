@@ -6,7 +6,7 @@ import io.kanro.mediator.desktop.model.CallTimeline
 import io.kanro.mediator.desktop.model.MediatorConfiguration
 import io.kanro.mediator.internal.ServerManager
 
-class MainViewModel {
+object MainViewModel {
     val recoding = mutableStateOf(true)
 
     val filter = mutableStateOf("")
