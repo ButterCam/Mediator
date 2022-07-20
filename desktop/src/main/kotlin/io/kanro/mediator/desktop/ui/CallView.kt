@@ -33,7 +33,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.semantics.Role
@@ -134,7 +133,7 @@ fun CallView(call: CallTimeline?) {
 
 @Composable
 fun StatisticsView(call: CallTimeline) {
-    Column(Modifier.background(Color.White).fillMaxSize()) {
+    Column(Modifier.background(JBTheme.panelColors.bgContent).fillMaxSize()) {
 
         var selectedKey by remember(call) { mutableStateOf(-1) }
 
@@ -191,7 +190,7 @@ fun TimelineView(call: CallTimeline) {
                 )
         )
 
-        Box {
+        Box(Modifier.fillMaxSize()) {
             val timeline by call.asState()
             if (selectedEvent == null) {
                 Text("Select one event to view details", Modifier.align(Alignment.Center))
@@ -342,14 +341,18 @@ fun EventView(event: CallEvent.Close) {
 
 @Composable
 fun EventView(call: CallTimeline, event: CallEvent) {
-    var resolveFailed by remember { mutableStateOf(false) }
+    var resolveFailed: String? by remember { mutableStateOf(null) }
 
     val serverManager = MainViewModel.serverManager
     if (!event.resolved() && serverManager != null) {
         LaunchedEffect(call) {
-            if (event.resolved()) return@LaunchedEffect
-            if (!call.resolve()) {
-                resolveFailed = true
+            try {
+                if (event.resolved()) return@LaunchedEffect
+                if (!call.resolve()) {
+                    resolveFailed = "Fail to resolve call"
+                }
+            } catch (e: Exception) {
+                resolveFailed = "Fail to resolve call: ${e.message}"
             }
         }
     }
@@ -362,9 +365,10 @@ fun EventView(call: CallTimeline, event: CallEvent) {
     } else {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Column {
+                val message = resolveFailed
                 when {
-                    resolveFailed -> {
-                        Text("Fail to resolve call")
+                    message != null -> {
+                        Text(message)
                     }
                     serverManager != null -> {
                         ProgressBar()
@@ -434,7 +438,7 @@ fun MetadataItem(
         result
     }) {
         JBTreeItem(modifier = Modifier.fillMaxWidth(), selected = selected, onClick = onClick) {
-            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Row(modifier = Modifier.fillMaxSize(), verticalAlignment = Alignment.CenterVertically) {
                 Label(key)
                 Label(" = ", color = JBTheme.textColors.infoInput)
                 Label(value)

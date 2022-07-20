@@ -34,7 +34,11 @@ import io.kanro.compose.jetbrains.control.TextFieldDefaults
 import io.kanro.compose.jetbrains.control.jBorder
 import io.kanro.mediator.desktop.viewmodel.MainViewModel
 import io.kanro.mediator.internal.ServerManager
+import io.kanro.mediator.internal.emitCall
+import io.kanro.mediator.internal.randomCall
+import kotlinx.coroutines.runBlocking
 import java.io.IOException
+import java.lang.management.ManagementFactory
 import java.net.BindException
 
 @Composable
@@ -79,6 +83,19 @@ fun FilterBox(modifier: Modifier = Modifier) {
         Box(Modifier.width(0.dp).weight(1f), contentAlignment = Alignment.CenterEnd) {
             JBToolBar(Orientation.Horizontal, modifier = Modifier.padding(end = 7.dp)) {
                 var configWindow by remember { mutableStateOf(false) }
+                if (ManagementFactory.getRuntimeMXBean().inputArguments.toString().contains("-agentlib:jdwp")) {
+                    ActionButton({
+                        runBlocking {
+                            val call = randomCall()
+                            MainViewModel.calls += call
+                            MainViewModel.shownCalls += call
+                            emitCall(call)
+                        }
+                    }) {
+                        Icon("icons/startDebugger.svg", "Stop server")
+                    }
+
+                }
 
                 ActionButton({
                     if (MainViewModel.recoding.value) {
@@ -116,8 +133,9 @@ fun FilterBox(modifier: Modifier = Modifier) {
                 }) {
                     Icon("icons/editorconfig.svg", "Configuration")
                     if (configWindow) {
+                        val configViewModel = remember(MainViewModel.configuration) { MainViewModel.configView() }
                         ConfigDialog(
-                            MainViewModel.configView(),
+                            configViewModel,
                             {
                                 MainViewModel.configuration = it.serialize().also {
                                     it.save()
@@ -128,6 +146,7 @@ fun FilterBox(modifier: Modifier = Modifier) {
                                     ServerManager(MainViewModel, MainViewModel.configuration).run()
                             },
                             {
+                                MainViewModel.currentTheme.value = MainViewModel.configuration.theme
                                 configWindow = false
                             }
                         )

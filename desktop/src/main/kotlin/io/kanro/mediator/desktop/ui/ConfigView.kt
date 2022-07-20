@@ -48,6 +48,7 @@ import androidx.compose.ui.window.DialogState
 import androidx.compose.ui.window.rememberDialogState
 import com.bybutter.sisyphus.string.toTitleCase
 import io.kanro.compose.jetbrains.JBTheme
+import io.kanro.compose.jetbrains.JBThemeStyle
 import io.kanro.compose.jetbrains.SelectionScope
 import io.kanro.compose.jetbrains.control.Button
 import io.kanro.compose.jetbrains.control.CheckBox
@@ -63,6 +64,7 @@ import io.kanro.compose.jetbrains.control.jBorder
 import io.kanro.mediator.desktop.LocalWindow
 import io.kanro.mediator.desktop.model.RequestRule
 import io.kanro.mediator.desktop.viewmodel.ConfigViewModel
+import io.kanro.mediator.desktop.viewmodel.MainViewModel
 import io.kanro.mediator.desktop.viewmodel.MetadataEntry
 import io.kanro.mediator.desktop.viewmodel.RequestRuleViewModel
 import io.kanro.mediator.desktop.viewmodel.ServerRuleViewModel
@@ -107,7 +109,12 @@ fun ConfigDialog(
                 JPanelBorder(Modifier.height(1.dp).fillMaxWidth())
                 Row(Modifier.height(0.dp).weight(1.0f).fillMaxWidth()) {
                     var selectedItem by remember { mutableStateOf(0) }
-                    Box(Modifier.background(Color(0xFFE6EBF0)).fillMaxHeight().width(150.dp)) {
+                    val background = if (JBTheme.style == JBThemeStyle.DARK) {
+                        Color(0xFF3F434C)
+                    } else {
+                        Color(0xFFE6EBF0)
+                    }
+                    Box(Modifier.background(background).fillMaxHeight().width(150.dp)) {
                         Column {
                             ConfigItem(
                                 selectedItem == 0,
@@ -224,6 +231,22 @@ fun ConfigItem(
 fun GeneralConfigView(vm: ConfigViewModel) {
     Column(Modifier.padding(horizontal = 20.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text("General", style = JBTheme.typography.defaultBold)
+
+        Row(Modifier.height(28.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text("Theme:", modifier = Modifier.width(100.dp))
+            DropdownList(
+                listOf(null, *JBThemeStyle.values()),
+                vm.theme.value,
+                onValueChange = {
+                    vm.theme.value = it
+                    vm.changed.value = true
+                    MainViewModel.currentTheme.value = it
+                },
+                valueRender = {
+                    it?.toString()?.toTitleCase() ?: "Auto"
+                }
+            )
+        }
 
         Row(Modifier.height(28.dp), verticalAlignment = Alignment.CenterVertically) {
             Text("Proxy port:", modifier = Modifier.width(100.dp))

@@ -9,6 +9,7 @@ import com.github.fge.jsonpatch.JsonPatch
 import com.github.fge.jsonpatch.MoveOperation
 import com.github.fge.jsonpatch.RemoveOperation
 import com.github.fge.jsonpatch.ReplaceOperation
+import io.kanro.compose.jetbrains.JBThemeStyle
 import net.harawata.appdirs.AppDirsFactory
 import kotlin.io.path.Path
 import kotlin.io.path.createDirectories
@@ -17,6 +18,7 @@ import kotlin.io.path.readText
 import kotlin.io.path.writeText
 
 data class MediatorConfiguration(
+    val theme: JBThemeStyle? = null,
     val proxyPort: Int = 8888,
     val grpcPort: Int = 9999,
     val serverRules: List<ServerRule> = listOf(),

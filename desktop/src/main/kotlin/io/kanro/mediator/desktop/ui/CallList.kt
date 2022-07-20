@@ -29,12 +29,10 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.semantics.Role
@@ -136,7 +134,7 @@ fun CallRowHeader(
         modifier = Modifier
             .height(23.dp)
             .fillMaxWidth()
-            .background(JBTheme.panelColors.bgDialog)
+            .background(JBTheme.panelColors.bgContent)
             .jBorder(bottom = 1.dp, color = JBTheme.panelColors.border),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -196,7 +194,7 @@ fun CallRow(
                 .fillMaxWidth()
                 .run {
                     if (!selected) {
-                        background(color = Color.White)
+                        background(color = JBTheme.panelColors.bgContent)
                     } else {
                         this
                     }

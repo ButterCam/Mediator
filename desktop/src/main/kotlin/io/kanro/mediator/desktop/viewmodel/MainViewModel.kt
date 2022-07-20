@@ -19,10 +19,13 @@ object MainViewModel {
 
     var configuration: MediatorConfiguration = MediatorConfiguration.load()
 
+    val currentTheme = mutableStateOf(configuration.theme)
+
     var serverManager: ServerManager? = ServerManager(this, configuration).run()
 
     fun configView(): ConfigViewModel {
         return ConfigViewModel(
+            configuration.theme,
             configuration.proxyPort,
             configuration.grpcPort,
             configuration.serverRules.map {

@@ -3,9 +3,11 @@ package io.kanro.mediator.desktop.viewmodel
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.neverEqualPolicy
 import androidx.compose.runtime.toMutableStateList
+import io.kanro.compose.jetbrains.JBThemeStyle
 import io.kanro.mediator.desktop.model.MediatorConfiguration
 
 class ConfigViewModel(
+    theme: JBThemeStyle?,
     proxyPort: Int,
     grpcPort: Int,
     serverRules: List<ServerRuleViewModel>,
@@ -15,6 +17,8 @@ class ConfigViewModel(
 
     val grpcPort = mutableStateOf(grpcPort.toString(), policy = neverEqualPolicy())
 
+    val theme = mutableStateOf(theme, policy = neverEqualPolicy())
+
     val changed = mutableStateOf(false)
 
     val serverRules = serverRules.toMutableStateList()
@@ -23,6 +27,7 @@ class ConfigViewModel(
 
     fun serialize(): MediatorConfiguration {
         return MediatorConfiguration(
+            theme.value,
             proxyPort.value.toInt(),
             grpcPort.value.toInt(),
             serverRules.filter { it.regex.value.isNotEmpty() }.map { it.serialize() },
