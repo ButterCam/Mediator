@@ -1,6 +1,7 @@
 package io.kanro.mediator.internal
 
 import com.bybutter.sisyphus.protobuf.ProtobufBooster
+import io.grpc.HttpConnectProxiedSocketAddress
 import io.grpc.ManagedChannel
 import io.grpc.ManagedChannelBuilder
 import io.grpc.Server
@@ -9,6 +10,7 @@ import io.kanro.mediator.desktop.model.MediatorConfiguration
 import io.kanro.mediator.desktop.viewmodel.MainViewModel
 import io.kanro.mediator.proxy.backend.BackendChannelProvider
 import io.kanro.mediator.proxy.frontend.ProxyServer
+import java.net.InetSocketAddress
 
 class ServerManager(vm: MainViewModel, private val config: MediatorConfiguration) {
     /**
@@ -25,6 +27,8 @@ class ServerManager(vm: MainViewModel, private val config: MediatorConfiguration
 
     private val channels = mutableMapOf<String, ManagedChannel>()
 
+    private val replayChannels = mutableMapOf<String, ManagedChannel>()
+
     private val reflections = mutableMapOf<String, StatefulProtoReflection>()
 
     fun channel(authority: String): io.grpc.Channel {
@@ -40,6 +44,24 @@ class ServerManager(vm: MainViewModel, private val config: MediatorConfiguration
         return channels.getOrPut(rewriteAuthority) {
             ManagedChannelBuilder.forTarget(rewriteAuthority)
                 .intercept(ReflectionAuth(rules))
+                .usePlaintext().build()
+        }
+    }
+
+    fun replayChannel(authority: String): io.grpc.Channel {
+        return replayChannels.getOrPut(authority) {
+            ManagedChannelBuilder.forTarget(authority)
+                .proxyDetector {
+                    HttpConnectProxiedSocketAddress.newBuilder()
+                        .setTargetAddress(it as InetSocketAddress)
+                        .setProxyAddress(
+                            InetSocketAddress(
+                                "127.0.0.1",
+                                config.proxyPort
+                            )
+                        )
+                        .build()
+                }
                 .usePlaintext().build()
         }
     }
@@ -69,6 +91,9 @@ class ServerManager(vm: MainViewModel, private val config: MediatorConfiguration
         proxyServer.close()
         server.shutdown().awaitTermination()
         channels.values.forEach {
+            it.shutdownNow()
+        }
+        replayChannels.values.forEach {
             it.shutdownNow()
         }
         state = 2

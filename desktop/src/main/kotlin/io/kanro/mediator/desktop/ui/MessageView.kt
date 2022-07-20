@@ -7,7 +7,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.foundation.verticalScroll
@@ -108,7 +107,7 @@ internal fun RepeatedFieldView(
                 selectedItem.value = key
             },
             content = {
-                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Row(Modifier.fillMaxSize(), verticalAlignment = Alignment.CenterVertically) {
                     Label(field.name)
                     when (value) {
                         is List<*> -> {
@@ -192,7 +191,7 @@ internal fun SimpleFieldView(
                         selectedItem.value = key
                     }
                 ) {
-                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Row(Modifier.fillMaxSize(), verticalAlignment = Alignment.CenterVertically) {
                         Label(prefix ?: field.name)
                         Label(": ${field.typeName.substringAfterLast('.')}", color = JBTheme.textColors.infoInput)
                         Label(" = $value")
@@ -209,7 +208,7 @@ internal fun SimpleFieldView(
                         selectedItem.value = key
                     }
                 ) {
-                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Row(Modifier.fillMaxSize(), verticalAlignment = Alignment.CenterVertically) {
                         Label(prefix ?: field.name)
                         Label(": bytes", color = JBTheme.textColors.infoInput)
                         Label(" = ${(value as ByteArray).base64()}")
@@ -225,7 +224,7 @@ internal fun SimpleFieldView(
                         selectedItem.value = key
                     }
                 ) {
-                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Row(Modifier.fillMaxSize(), verticalAlignment = Alignment.CenterVertically) {
                         Label(prefix ?: field.name)
                         Label(": string", color = JBTheme.textColors.infoInput)
                         Label(" = ${value?.toJson()}")
@@ -240,7 +239,7 @@ internal fun SimpleFieldView(
                     selectedItem.value = key
                 }
             ) {
-                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Row(Modifier.fillMaxSize(), verticalAlignment = Alignment.CenterVertically) {
                     Label(prefix ?: field.name)
                     Label(": ${field.type.toString().toCamelCase()}", color = JBTheme.textColors.infoInput)
                     Label(" = $value")
@@ -315,7 +314,7 @@ internal fun MessageFieldView(
                 selectedItem.value = key
             },
             content = {
-                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Row(Modifier.fillMaxSize(), verticalAlignment = Alignment.CenterVertically) {
                     Label(prefix ?: field.name)
                     Label(": ${message.type().substringAfterLast('.')}", color = JBTheme.textColors.infoInput)
                     when (message) {

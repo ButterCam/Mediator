@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+  <title>Rerun</title>
+  <g>
+    <rect width="16" height="16" fill="#ffc4ff" opacity="0"/>
+    <path d="M14.5,5,9,1V4H6.5a5.5,5.5,0,0,0,0,11H9V13H6.5a3.5,3.5,0,0,1,0-7H9V9Z" fill="#59a869"/>
+  </g>
+</svg>
