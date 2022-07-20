@@ -50,6 +50,8 @@ compose.desktop {
                 "-Dapple.awt.application.appearance=system"
             )
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
+            modules("java.management")
+
             packageName = "mediator"
             packageVersion = project.version.toString()
 
