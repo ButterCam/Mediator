@@ -27,7 +27,6 @@ object MainViewModel {
         return ConfigViewModel(
             configuration.theme,
             configuration.proxyPort,
-            configuration.grpcPort,
             configuration.serverRules.map {
                 ServerRuleViewModel(it)
             },

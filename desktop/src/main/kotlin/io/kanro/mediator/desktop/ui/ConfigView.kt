@@ -140,18 +140,18 @@ fun ConfigDialog(
                                     style = JBTheme.typography.defaultBold
                                 )
                             }
-                            ConfigItem(
-                                selectedItem == 2,
-                                {
-                                    selectedItem = 2
-                                }
-                            ) {
-                                Text(
-                                    "Request Rule",
-                                    Modifier.padding(horizontal = 12.dp),
-                                    style = JBTheme.typography.defaultBold
-                                )
-                            }
+//                            ConfigItem(
+//                                selectedItem == 2,
+//                                {
+//                                    selectedItem = 2
+//                                }
+//                            ) {
+//                                Text(
+//                                    "Request Rule",
+//                                    Modifier.padding(horizontal = 12.dp),
+//                                    style = JBTheme.typography.defaultBold
+//                                )
+//                            }
                         }
                     }
                     JPanelBorder(Modifier.width(1.dp).fillMaxHeight())
@@ -271,35 +271,6 @@ fun GeneralConfigView(vm: ConfigViewModel) {
                         error = false
                     } ?: kotlin.run {
                         vm.proxyPort.value = vm.proxyPort.value
-                    }
-                },
-                isError = error, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-            )
-        }
-
-        Row(Modifier.height(28.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text("Grpc Server port:", modifier = Modifier.width(100.dp))
-            var error by remember { mutableStateOf(false) }
-            TextField(
-                vm.grpcPort.value,
-                {
-                    vm.changed.value = true
-                    if (it.isEmpty()) {
-                        error = true
-                        vm.grpcPort.value = it
-                    }
-
-                    it.toIntOrNull()?.let {
-                        if (it < 0) {
-                            vm.grpcPort.value = "0"
-                        } else if (it > 65535) {
-                            vm.grpcPort.value = "65535"
-                        } else {
-                            vm.grpcPort.value = it.toString()
-                        }
-                        error = false
-                    } ?: kotlin.run {
-                        vm.grpcPort.value = vm.grpcPort.value
                     }
                 },
                 isError = error, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)

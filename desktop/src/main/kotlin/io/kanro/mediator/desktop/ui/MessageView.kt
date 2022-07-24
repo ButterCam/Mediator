@@ -134,7 +134,6 @@ internal fun RepeatedFieldView(
                             )
                         }
                     }
-
                 }
             }
         ) {

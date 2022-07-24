@@ -141,19 +141,22 @@ fun StatisticsView(call: CallTimeline) {
             selectedKey = 0
         }
         val start = call.start()
-        MetadataItem("Authority", start.authority, selectedKey == 1) {
+        MetadataItem("Host", start.resolvedAuthority, selectedKey == 1) {
             selectedKey = 1
         }
-        MetadataItem("Method", start.method, selectedKey == 2) {
+        MetadataItem("Authority", start.authority, selectedKey == 2) {
             selectedKey = 2
         }
-        MetadataItem("Start time", start.timestamp().string(), selectedKey == 3) {
+        MetadataItem("Method", start.method, selectedKey == 3) {
             selectedKey = 3
+        }
+        MetadataItem("Start time", start.timestamp().string(), selectedKey == 4) {
+            selectedKey = 4
         }
         val close = call.close()
         if (close != null) {
-            MetadataItem("End time", close.timestamp().string(), selectedKey == 4) {
-                selectedKey = 4
+            MetadataItem("End time", close.timestamp().string(), selectedKey == 5) {
+                selectedKey = 5
             }
         }
     }

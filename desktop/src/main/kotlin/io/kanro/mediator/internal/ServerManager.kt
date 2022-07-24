@@ -1,15 +1,13 @@
 package io.kanro.mediator.internal
 
 import com.bybutter.sisyphus.protobuf.ProtobufBooster
+import io.grpc.ConnectivityState
 import io.grpc.HttpConnectProxiedSocketAddress
 import io.grpc.ManagedChannel
 import io.grpc.ManagedChannelBuilder
-import io.grpc.Server
-import io.grpc.ServerBuilder
 import io.kanro.mediator.desktop.model.MediatorConfiguration
 import io.kanro.mediator.desktop.viewmodel.MainViewModel
-import io.kanro.mediator.proxy.backend.BackendChannelProvider
-import io.kanro.mediator.proxy.frontend.ProxyServer
+import io.kanro.mediator.netty.frontend.GrpcProxyServer
 import java.net.InetSocketAddress
 
 class ServerManager(vm: MainViewModel, private val config: MediatorConfiguration) {
@@ -18,12 +16,9 @@ class ServerManager(vm: MainViewModel, private val config: MediatorConfiguration
      */
     private var state = 0
 
-    private val server: Server = ServerBuilder.forPort(config.grpcPort)
-        .intercept(GrpcCallLogger())
-        .fallbackHandlerRegistry(MediatorRegistry(this))
-        .build()
+    private val interceptor = MediatorGrpcProxySupport(config)
 
-    private val proxyServer = ProxyServer("http", config.proxyPort)
+    private val proxyServer = GrpcProxyServer(config.proxyPort, interceptor)
 
     private val channels = mutableMapOf<String, ManagedChannel>()
 
@@ -42,27 +37,44 @@ class ServerManager(vm: MainViewModel, private val config: MediatorConfiguration
         }
 
         return channels.getOrPut(rewriteAuthority) {
-            ManagedChannelBuilder.forTarget(rewriteAuthority)
-                .intercept(ReflectionAuth(rules))
-                .usePlaintext().build()
+            ManagedChannelBuilder.forTarget(rewriteAuthority).intercept(ReflectionAuth(rules)).usePlaintext().build()
         }
     }
 
     fun replayChannel(authority: String): io.grpc.Channel {
         return replayChannels.getOrPut(authority) {
-            ManagedChannelBuilder.forTarget(authority)
-                .proxyDetector {
-                    HttpConnectProxiedSocketAddress.newBuilder()
-                        .setTargetAddress(it as InetSocketAddress)
-                        .setProxyAddress(
-                            InetSocketAddress(
-                                "127.0.0.1",
-                                config.proxyPort
-                            )
-                        )
-                        .build()
-                }
-                .usePlaintext().build()
+            ManagedChannelBuilder.forTarget(authority).proxyDetector {
+                HttpConnectProxiedSocketAddress.newBuilder().setTargetAddress(it as InetSocketAddress).setProxyAddress(
+                    InetSocketAddress(
+                        "127.0.0.1", config.proxyPort
+                    )
+                ).build()
+            }.usePlaintext().build().apply {
+                this.notifyWhenStateChanged(
+                    ConnectivityState.CONNECTING,
+                    {
+                        println("Connecting to $authority")
+                    }
+                )
+                this.notifyWhenStateChanged(
+                    ConnectivityState.IDLE,
+                    {
+                        println("Connected to $authority")
+                    }
+                )
+                this.notifyWhenStateChanged(
+                    ConnectivityState.READY,
+                    {
+                        println("$authority ready")
+                    }
+                )
+                this.notifyWhenStateChanged(
+                    ConnectivityState.TRANSIENT_FAILURE,
+                    {
+                        println("File to connect to $authority")
+                    }
+                )
+            }
         }
     }
 
@@ -78,8 +90,7 @@ class ServerManager(vm: MainViewModel, private val config: MediatorConfiguration
         if (state != 0) {
             throw IllegalStateException("Wrong state for running")
         }
-        server.start()
-        proxyServer.run(BackendChannelProvider("tcp", "localhost", config.grpcPort))
+        proxyServer.run()
         state = 1
         return this
     }
@@ -89,7 +100,6 @@ class ServerManager(vm: MainViewModel, private val config: MediatorConfiguration
             throw IllegalStateException("Wrong state for running")
         }
         proxyServer.close()
-        server.shutdown().awaitTermination()
         channels.values.forEach {
             it.shutdownNow()
         }

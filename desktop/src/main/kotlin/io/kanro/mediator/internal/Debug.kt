@@ -71,10 +71,11 @@ fun randomDescriptor(): String {
 
 suspend fun randomCall(): CallTimeline {
     val method = randomMethod
+    val host = "$randomHost:${Random.nextInt(1000, 9999)}"
 
     return CallTimeline().apply {
         this.start(
-            "$randomHost:${Random.nextInt(1000, 9999)}", randomMethod, MethodType.UNKNOWN, randomMetadata(), listOf()
+            host, host, randomMethod, MethodType.UNKNOWN, randomMetadata()
         )
     }
 }
@@ -100,6 +101,7 @@ suspend fun emitCall(timeline: CallTimeline) {
             Status.fromCodeValue(Random.nextInt(17)).withDescription(randomDescriptor())
         } else {
             Status.OK.withDescription(randomDescriptor())
-        }, randomMetadata()
+        },
+        randomMetadata()
     )
 }

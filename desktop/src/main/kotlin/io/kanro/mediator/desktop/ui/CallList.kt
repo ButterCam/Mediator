@@ -227,7 +227,12 @@ fun CallRow(
             }
             JPanelBorder(Modifier.width(1.dp).fillMaxHeight())
             Box(Modifier.width(authorityWidth)) {
-                Text(start.authority, Modifier.padding(start = 7.dp), maxLines = 1)
+                val rewriteMark = if (start.authority == start.resolvedAuthority) {
+                    ""
+                } else {
+                    "*"
+                }
+                Text(start.authority + rewriteMark, Modifier.padding(start = 7.dp), maxLines = 1)
             }
             JPanelBorder(Modifier.width(1.dp).fillMaxHeight())
             Box(Modifier.width(0.dp).weight(1f)) {

@@ -20,7 +20,6 @@ import kotlin.io.path.writeText
 data class MediatorConfiguration(
     val theme: JBThemeStyle? = null,
     val proxyPort: Int = 8888,
-    val grpcPort: Int = 9999,
     val serverRules: List<ServerRule> = listOf(),
     val requestRules: List<RequestRule> = listOf(),
 ) {

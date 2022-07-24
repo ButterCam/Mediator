@@ -13,6 +13,7 @@ import io.grpc.Status
 sealed interface CallEvent : ChangedInteraction {
     class Start(
         val authority: String,
+        val resolvedAuthority: String,
         val method: String,
         val methodType: MethodType,
         val header: Metadata

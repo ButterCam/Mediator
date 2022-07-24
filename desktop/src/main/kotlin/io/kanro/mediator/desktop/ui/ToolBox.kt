@@ -39,7 +39,7 @@ import io.kanro.compose.jetbrains.control.TextFieldDefaults
 import io.kanro.compose.jetbrains.control.jBorder
 import io.kanro.mediator.desktop.model.CallEvent
 import io.kanro.mediator.desktop.viewmodel.MainViewModel
-import io.kanro.mediator.grpc.BasicProxyRegistry
+import io.kanro.mediator.internal.ByteArrayMarshaller
 import io.kanro.mediator.internal.ServerManager
 import io.kanro.mediator.internal.emitCall
 import io.kanro.mediator.internal.randomCall
@@ -103,41 +103,58 @@ fun FilterBox(modifier: Modifier = Modifier) {
                     }
                 }
 
-                ActionButton({
-                    val call = MainViewModel.selectedCall.value ?: return@ActionButton
-                    call.close() ?: return@ActionButton
+                ActionButton(
+                    {
+                        runBlocking {
+                            val call = MainViewModel.selectedCall.value ?: return@runBlocking
+                            call.close() ?: return@runBlocking
 
-                    val start = call.start()
-                    val channel = MainViewModel.serverManager?.replayChannel(start.authority) ?: return@ActionButton
+                            val start = call.start()
+                            val channel =
+                                MainViewModel.serverManager?.replayChannel(start.authority) ?: return@runBlocking
 
-                    val clientCall = channel.newCall(
-                        MethodDescriptor.newBuilder<ByteArray, ByteArray>()
-                            .setType(start.methodType.toGrpcType())
-                            .setRequestMarshaller(BasicProxyRegistry.ByteArrayMarshaller)
-                            .setResponseMarshaller(BasicProxyRegistry.ByteArrayMarshaller)
-                            .setFullMethodName(start.method).build(),
-                        CallOptions.DEFAULT.withWaitForReady()
-                    )
+                            val clientCall = channel.newCall(
+                                MethodDescriptor.newBuilder<ByteArray, ByteArray>()
+                                    .setType(start.methodType.toGrpcType())
+                                    .setRequestMarshaller(ByteArrayMarshaller)
+                                    .setResponseMarshaller(ByteArrayMarshaller)
+                                    .setFullMethodName(start.method).build(),
+                                CallOptions.DEFAULT.withWaitForReady()
+                            )
 
-                    clientCall.start(object : ClientCall.Listener<ByteArray>() {
-                        override fun onMessage(message: ByteArray?) {
+                            clientCall.start(
+                                object : ClientCall.Listener<ByteArray>() {
+                                    override fun onMessage(message: ByteArray?) {
+                                        clientCall.request(1)
+                                    }
+
+                                    override fun onClose(status: Status?, trailers: Metadata?) {
+                                        status
+                                    }
+                                },
+                                start.header
+                            )
+
+                            val r2 = clientCall.isReady
+
+                            call.events().forEach {
+                                if (it is CallEvent.Input) {
+                                    clientCall.sendMessage(it.message)
+                                }
+                            }
+                            val r3 = clientCall.isReady
+
+                            clientCall.halfClose()
+
+                            val r4 = clientCall.isReady
+
+                            println("$r2 $r3 $r4")
+
                             clientCall.request(1)
                         }
-
-                        override fun onClose(status: Status?, trailers: Metadata?) {
-                            status
-                        }
-                    }, start.header)
-
-                    call.events().forEach {
-                        if (it is CallEvent.Input) {
-                            clientCall.sendMessage(it.message)
-                        }
-                    }
-
-                    clientCall.halfClose()
-                    clientCall.request(1)
-                }, enabled = MainViewModel.selectedCall.value?.close() != null) {
+                    },
+                    enabled = MainViewModel.selectedCall.value?.close() != null
+                ) {
                     Icon("icons/reRun.svg", "Replay Request")
                 }
 

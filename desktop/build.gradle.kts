@@ -52,13 +52,15 @@ compose.desktop {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             modules("java.management")
 
-            packageName = "mediator"
+            packageName = "Mediator"
             packageVersion = project.version.toString()
+            copyright = "Beijing Muke Technology Co., Ltd."
 
             macOS {
                 bundleID = "com.bybutter.toolkit.mediator"
+                dockName = "Mediator"
 
-                val appleId = notarization.appleID.orNull ?: System.getenv("NOTARIZATION_APPLEID") ?: "higan@live.cn"
+                val appleId = notarization.appleID.orNull ?: System.getenv("NOTARIZATION_APPLEID")
 
                 if (appleId != null) {
                     signing {

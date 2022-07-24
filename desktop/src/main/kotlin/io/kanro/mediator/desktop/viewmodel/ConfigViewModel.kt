@@ -9,13 +9,10 @@ import io.kanro.mediator.desktop.model.MediatorConfiguration
 class ConfigViewModel(
     theme: JBThemeStyle?,
     proxyPort: Int,
-    grpcPort: Int,
     serverRules: List<ServerRuleViewModel>,
     requestRules: List<RequestRuleViewModel>
 ) {
     val proxyPort = mutableStateOf(proxyPort.toString(), policy = neverEqualPolicy())
-
-    val grpcPort = mutableStateOf(grpcPort.toString(), policy = neverEqualPolicy())
 
     val theme = mutableStateOf(theme, policy = neverEqualPolicy())
 
@@ -29,7 +26,6 @@ class ConfigViewModel(
         return MediatorConfiguration(
             theme.value,
             proxyPort.value.toInt(),
-            grpcPort.value.toInt(),
             serverRules.filter { it.regex.value.isNotEmpty() }.map { it.serialize() },
             requestRules.map { it.serialize() }
         )
