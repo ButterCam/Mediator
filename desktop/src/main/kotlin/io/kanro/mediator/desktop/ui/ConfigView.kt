@@ -69,6 +69,7 @@ import io.kanro.mediator.desktop.viewmodel.MetadataEntry
 import io.kanro.mediator.desktop.viewmodel.RequestRuleViewModel
 import io.kanro.mediator.desktop.viewmodel.ServerRuleViewModel
 import java.awt.Cursor
+import java.net.NetworkInterface
 
 @Composable
 @OptIn(ExperimentalComposeUiApi::class)
@@ -274,6 +275,32 @@ fun GeneralConfigView(vm: ConfigViewModel) {
                     }
                 },
                 isError = error, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+            )
+        }
+
+        Column(
+            Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.Start,
+            verticalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            Text("Local Address:", modifier = Modifier.width(100.dp))
+            val localAddress = remember {
+                buildString {
+                    for (inter in NetworkInterface.getNetworkInterfaces()) {
+                        for (address in inter.inetAddresses) {
+                            if (address.hostAddress.contains('%')) continue
+                            appendLine("${inter.name}:${address.hostAddress}")
+                        }
+                    }
+                }
+            }
+            TextField(
+                localAddress,
+                {},
+                modifier = Modifier.fillMaxSize(),
+                readOnly = true,
+                singleLine = false,
+                maxLines = Int.MAX_VALUE
             )
         }
     }

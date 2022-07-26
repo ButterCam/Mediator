@@ -60,7 +60,7 @@ compose.desktop {
                 bundleID = "com.bybutter.toolkit.mediator"
                 dockName = "Mediator"
 
-                val appleId = notarization.appleID.orNull ?: System.getenv("NOTARIZATION_APPLEID")
+                val appleId = notarization.appleID.orNull ?: System.getenv("NOTARIZATION_APPLEID") ?: "higan@live.cn"
 
                 if (appleId != null) {
                     signing {

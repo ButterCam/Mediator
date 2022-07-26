@@ -19,6 +19,7 @@ import io.netty.handler.codec.http2.Http2HeadersFrame
 import io.netty.handler.codec.http2.Http2StreamChannel
 import io.netty.util.AttributeKey
 import java.io.ByteArrayInputStream
+import kotlin.math.min
 
 class MediatorGrpcProxySupport(private val config: MediatorConfiguration) : GrpcProxySupport {
     override fun connectToBackend(frontend: Channel, backendBootstrap: Bootstrap, target: String): ChannelFuture {
@@ -167,22 +168,23 @@ class GrpcMessageReader(compressMode: String?) {
     private fun read0(buf: ByteBuf) {
         if (buf.readableBytes() == 0) return
 
-        var buffer = buffer
-        if (buffer == null) {
+        var bytes = buffer
+        if (bytes == null) {
             pos = 0
             compressed = buf.readByte() > 0.toByte()
-            buffer = ByteArray(buf.readUnsignedInt().toInt())
+            bytes = ByteArray(buf.readUnsignedInt().toInt())
+            this.buffer = bytes
         }
 
         val currentIndex = buf.readerIndex()
-        buf.readBytes(buffer, pos, buffer.size - pos)
+        buf.readBytes(bytes, pos, min(bytes.size - pos, buf.readableBytes()))
         pos += buf.readerIndex() - currentIndex
 
-        if (buffer.size == pos) {
-            if (compressed) {
-                buffers += codec.decompress(ByteArrayInputStream(buffer)).readAllBytes()
+        if (bytes.size == pos) {
+            buffers += if (compressed) {
+                codec.decompress(ByteArrayInputStream(bytes)).readAllBytes()
             } else {
-                buffers += buffer
+                bytes
             }
             this.buffer = null
         }

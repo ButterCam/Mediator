@@ -33,7 +33,7 @@ class HttpConnectProxyHandler : SimpleChannelInboundHandler<HttpRequest>() {
             val support = ctx.channel().attr(GrpcProxySupport.KEY).get()
             val backend = support.connectToBackend(
                 ctx.channel(), backendBootstrap(ctx.channel()), msg.headers().get("Host")
-            ).channel()
+            ).await().channel()
             ctx.channel().attr(GrpcProxySupport.BACKEND_CHANNEL_KEY).set(backend)
         } else {
             ctx.writeAndFlush(DefaultFullHttpResponse(msg.protocolVersion(), HttpResponseStatus.METHOD_NOT_ALLOWED))
