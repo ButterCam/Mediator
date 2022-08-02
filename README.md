@@ -1,5 +1,14 @@
-![](./docs/MD-Light.svg#gh-light-mode-only)
-![](./docs/MD-Dark.svg#gh-dark-mode-only)
+<h1 align="center">
+<p>
+<img src="./docs/MD-Light.svg#gh-light-mode-only" width="500px" alt="Mediator"/>
+<img src="./docs/MD-Dark.svg#gh-dark-mode-only" width="500px" alt="Mediator"/>
+</p>
+<p>
+<a href="https://github.com/grpc-ecosystem/awesome-grpc"><img alt="Awesome gRPC" src="https://raw.githubusercontent.com/sindresorhus/awesome/main/media/badge.svg" /></a>
+<a href="https://www.jetbrains.com/lp/compose/"><img src="https://img.shields.io/badge/JetBrains-Compose-ff69b4" alt="JetBrains Compose"/></a>
+<a href="https://github.com/ButterCam/Mediator/releases"><img alt="GitHub release (latest by date)" src="https://img.shields.io/github/v/release/ButterCam/Mediator"></a>
+</p>
+</h1>
 
 Cross-platform GUI gRPC debugging proxy like [charles](https://www.charlesproxy.com/) but design for gRPC.
 
