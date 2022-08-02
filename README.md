@@ -1,5 +1,5 @@
-![](./docs/Md-Light.svg#gh-light-mode-only)
-![](./docs/Md-Dark.svg#gh-dark-mode-only)
+![](./docs/MD-Light.svg#gh-light-mode-only)
+![](./docs/MD-Dark.svg#gh-dark-mode-only)
 
 Cross-platform GUI gRPC debugging proxy like [charles](https://www.charlesproxy.com/) but design for gRPC.
 
