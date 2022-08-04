@@ -56,9 +56,14 @@ compose.desktop {
             packageVersion = project.version.toString()
             copyright = "Beijing Muke Technology Co., Ltd."
 
+            windows {
+                iconFile.set(project.file("./src/main/resources/icon.ico"))
+            }
+
             macOS {
                 bundleID = "com.bybutter.toolkit.mediator"
                 dockName = "Mediator"
+                iconFile.set(project.file("./src/main/resources/icon.icns"))
 
                 val appleId = notarization.appleID.orNull ?: System.getenv("NOTARIZATION_APPLEID") ?: "higan@live.cn"
 

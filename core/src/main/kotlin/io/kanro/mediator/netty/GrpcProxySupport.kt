@@ -56,6 +56,14 @@ interface GrpcProxySupport {
         return frame.duplicate()
     }
 
+    fun onHttp2Error(
+        fs: Http2StreamChannel,
+        bs: Http2StreamChannel,
+        causeChannel: Http2StreamChannel,
+        errorCode: Int
+    ) {
+    }
+
     companion object {
         val KEY = AttributeKey.valueOf<GrpcProxySupport>(GrpcProxySupport::class.java, "grpc-proxy-support")
 

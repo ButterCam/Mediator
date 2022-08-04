@@ -95,18 +95,19 @@ jobs:
           NOTARIZATION_PASSWORD: ${{ secrets.NOTARIZATION_PASSWORD }}
         run: ./gradlew package
 
+      - name: Notarize dmg for MacOS
+        if: matrix.platform == 'macos-latest'
+        run: ./gradlew notarizeDmg
+
       # Upload plugin artifact to make it available in the next jobs
       - name: Upload artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: mediator-artifact
           path: |
             ./desktop/build/compose/binaries/main/msi/
-            ./desktop/build/compose/binaries/main/dmg/
             ./desktop/build/compose/binaries/main/deb/
-            ./pick-or-not/build/compose/binaries/main/msi/
-            ./pick-or-not/build/compose/binaries/main/dmg/
-            ./pick-or-not/build/compose/binaries/main/deb/
+            ./desktop/build/compose/notarization/main/*/*.dmg
 
   # Prepare a draft release for GitHub Releases page for the manual verification
   # If accepted and published, release workflow would be triggered
@@ -134,7 +135,7 @@ jobs:
 
       # Download plugin artifact provided by the previous job
       - name: Download Artifact
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: mediator-artifact
           path: ./binaries

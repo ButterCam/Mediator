@@ -2,6 +2,7 @@ package io.kanro.mediator.internal
 
 import com.bybutter.sisyphus.security.base64Decode
 import io.grpc.Codec
+import io.grpc.Metadata
 import io.grpc.Status
 import io.kanro.mediator.desktop.model.CallTimeline
 import io.kanro.mediator.desktop.model.MediatorConfiguration
@@ -106,6 +107,33 @@ class MediatorGrpcProxySupport(private val config: MediatorConfiguration) : Grpc
         }
         timeline.close(status ?: Status.UNKNOWN, headers.toGrpcMetadata())
         return super.onResponseHeader(fs, bs, frame)
+    }
+
+    override fun onHttp2Error(
+        fs: Http2StreamChannel,
+        bs: Http2StreamChannel,
+        causeChannel: Http2StreamChannel,
+        errorCode: Int
+    ) {
+        val stream = when (causeChannel) {
+            fs -> "Frontend"
+            bs -> "Backend"
+            else -> "Unknown"
+        }
+
+        val status = when (errorCode) {
+            0x7 -> Status.UNAVAILABLE.withDescription("$stream stream closed")
+            0x8 -> Status.CANCELLED.withDescription("$stream stream cancelled")
+            0xb -> Status.RESOURCE_EXHAUSTED.withDescription("$stream stream flow control error")
+            0xc -> Status.PERMISSION_DENIED.withDescription("$stream stream permission denied")
+            else -> Status.UNKNOWN.withDescription("$stream stream error $errorCode")
+        }
+
+        val timeline = fs.attr(TIMELINE_KEY).get()
+        timeline.close(status, Metadata().apply {
+            put("grpc-status".stringKey(), status.code.value().toString())
+            put("grpc-message".stringKey(), status.description)
+        })
     }
 
     companion object {
