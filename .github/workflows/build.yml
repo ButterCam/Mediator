@@ -97,6 +97,9 @@ jobs:
 
       - name: Notarize dmg for MacOS
         if: matrix.platform == 'macos-latest'
+        env:
+          NOTARIZATION_APPLEID: ${{ secrets.NOTARIZATION_APPLEID }}
+          NOTARIZATION_PASSWORD: ${{ secrets.NOTARIZATION_PASSWORD }}
         run: ./gradlew notarizeDmg
 
       # Upload plugin artifact to make it available in the next jobs
