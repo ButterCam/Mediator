@@ -7,7 +7,9 @@ import io.netty.handler.codec.http2.DefaultHttp2HeadersFrame
 import io.netty.handler.codec.http2.Http2DataFrame
 import io.netty.handler.codec.http2.Http2HeadersFrame
 import io.netty.handler.codec.http2.Http2StreamChannel
+import io.netty.handler.ssl.SslContext
 import io.netty.util.AttributeKey
+import java.security.cert.X509Certificate
 
 fun Http2HeadersFrame.duplicate(): Http2HeadersFrame {
     return DefaultHttp2HeadersFrame(this.headers(), this.isEndStream)
@@ -15,6 +17,12 @@ fun Http2HeadersFrame.duplicate(): Http2HeadersFrame {
 
 interface GrpcProxySupport {
     fun connectToBackend(frontend: Channel, backendBootstrap: Bootstrap, target: String): ChannelFuture
+
+    fun connectToBackendTransparent(frontend: Channel, backendBootstrap: Bootstrap, target: String): ChannelFuture
+
+    fun sslContext(frontend: Channel, target: String): SslContext?
+
+    fun getCertificateAuthority(): X509Certificate
 
     fun onRequestHeader(
         fs: Http2StreamChannel,
@@ -66,6 +74,12 @@ interface GrpcProxySupport {
 
     companion object {
         val KEY = AttributeKey.valueOf<GrpcProxySupport>(GrpcProxySupport::class.java, "grpc-proxy-support")
+
+        val TARGET_HOST_KEY = AttributeKey.valueOf<String>(String::class.java, "grpc-host")
+
+        val FRONTEND_SSL_ENABLE_KEY = AttributeKey.valueOf<Boolean>(Boolean::class.java, "grpc-frontend-ssl")
+
+        val BACKEND_SSL_ENABLE_KEY = AttributeKey.valueOf<Boolean>(Boolean::class.java, "grpc-backend-ssl")
 
         val FRONTEND_CHANNEL_KEY = AttributeKey.valueOf<Channel>(GrpcProxySupport::class.java, "grpc-frontend")
 

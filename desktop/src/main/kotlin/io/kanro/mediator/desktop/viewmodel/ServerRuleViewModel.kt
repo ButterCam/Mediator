@@ -31,6 +31,8 @@ class ServerRuleViewModel(
 
     val replace = mutableStateOf(replace)
 
+    val replaceSsl = mutableStateOf(false)
+
     val reflectionMetadata = reflectionMetadata.map {
         MetadataEntry(it.key, it.value)
     }.toMutableStateList()
@@ -42,6 +44,7 @@ class ServerRuleViewModel(
             regex.value.toRegex(),
             replaceEnabled.value,
             replace.value,
+            replaceSsl.value,
             reflectionMetadata.filter { it.key.value.isNotEmpty() }.associate { it.key.value to it.value.value }
         )
     }

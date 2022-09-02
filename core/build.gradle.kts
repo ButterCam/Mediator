@@ -17,6 +17,7 @@ dependencies {
     api("com.bybutter.sisyphus:sisyphus-jackson-protobuf:1.3.35")
     api("io.grpc:grpc-netty:1.42.1")
     api("io.netty:netty-handler-proxy:4.1.72.Final")
+    api("org.bouncycastle:bcpkix-jdk15on:1.70")
 
     testImplementation(kotlin("test-junit5"))
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.2")

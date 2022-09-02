@@ -75,7 +75,7 @@ suspend fun randomCall(): CallTimeline {
 
     return CallTimeline().apply {
         this.start(
-            host, host, randomMethod, MethodType.UNKNOWN, randomMetadata()
+            Random.nextBoolean(), host, host, randomMethod, MethodType.UNKNOWN, randomMetadata()
         )
     }
 }

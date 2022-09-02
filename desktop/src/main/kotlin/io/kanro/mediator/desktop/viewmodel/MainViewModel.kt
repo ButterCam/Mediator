@@ -4,6 +4,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import io.kanro.mediator.desktop.model.CallTimeline
 import io.kanro.mediator.desktop.model.MediatorConfiguration
+import io.kanro.mediator.desktop.model.MediatorSslConfig
 import io.kanro.mediator.internal.ServerManager
 
 object MainViewModel {
@@ -18,6 +19,8 @@ object MainViewModel {
     val selectedCall = mutableStateOf<CallTimeline?>(null)
 
     var configuration: MediatorConfiguration = MediatorConfiguration.load()
+
+    var sslConfig: MediatorSslConfig = MediatorSslConfig.instance
 
     val currentTheme = mutableStateOf(configuration.theme)
 

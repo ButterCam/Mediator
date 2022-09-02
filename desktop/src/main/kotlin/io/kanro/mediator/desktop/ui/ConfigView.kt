@@ -77,7 +77,7 @@ fun ConfigDialog(
     vm: ConfigViewModel,
     onSave: (ConfigViewModel) -> Unit,
     onCloseRequest: () -> Unit,
-    state: DialogState = rememberDialogState(size = DpSize(700.dp, 500.dp)),
+    state: DialogState = rememberDialogState(size = DpSize(800.dp, 600.dp)),
     visible: Boolean = true,
     title: String = "Mediator Settings",
     icon: Painter? = null,
@@ -234,7 +234,7 @@ fun GeneralConfigView(vm: ConfigViewModel) {
         Text("General", style = JBTheme.typography.defaultBold)
 
         Row(Modifier.height(28.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text("Theme:", modifier = Modifier.width(100.dp))
+            Text("Theme:", modifier = Modifier.width(70.dp))
             DropdownList(
                 listOf(null, *JBThemeStyle.values()),
                 vm.theme.value,
@@ -250,7 +250,7 @@ fun GeneralConfigView(vm: ConfigViewModel) {
         }
 
         Row(Modifier.height(28.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text("Proxy port:", modifier = Modifier.width(100.dp))
+            Text("Proxy port:", modifier = Modifier.width(70.dp))
             var error by remember { mutableStateOf(false) }
             TextField(
                 vm.proxyPort.value,
@@ -400,6 +400,20 @@ fun ServerRuleView(vm: ConfigViewModel) {
 
                     Row(Modifier.height(28.dp), verticalAlignment = Alignment.CenterVertically) {
                         Text("Rewrite:", Modifier.width(80.dp))
+
+                        DropdownList(
+                            listOf(false, true),
+                            rule.replaceSsl.value,
+                            onValueChange = {
+                                rule.replaceSsl.value = it
+                                vm.changed.value = true
+                            },
+                            valueRender = {
+                                if (it) "HTTPS" else "HTTP"
+                            },
+                            enabled = rule.replaceEnabled.value
+                        )
+                        Spacer(Modifier.width(8.dp))
                         TextField(
                             rule.replace.value,
                             onValueChange = {

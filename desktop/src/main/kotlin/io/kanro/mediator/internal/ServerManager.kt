@@ -16,7 +16,7 @@ class ServerManager(vm: MainViewModel, private val config: MediatorConfiguration
      */
     private var state = 0
 
-    private val interceptor = MediatorGrpcProxySupport(config)
+    private val interceptor = MediatorGrpcProxySupport(config, vm.sslConfig)
 
     private val proxyServer = GrpcProxyServer(config.proxyPort, interceptor)
 
@@ -26,30 +26,45 @@ class ServerManager(vm: MainViewModel, private val config: MediatorConfiguration
 
     private val reflections = mutableMapOf<String, StatefulProtoReflection>()
 
-    fun channel(authority: String): io.grpc.Channel {
-        val rules = config.serverRules.filter {
-            it.authority.matches(authority)
-        }
-        val rewriteAuthority = rules.fold(authority) { r, it ->
-            if (it.enabled && it.replaceEnabled && it.replace.isNotBlank()) {
-                it.authority.replace(authority, it.replace)
-            } else r
-        }
+    fun channel(authority: String, ssl: Boolean): io.grpc.Channel {
+        val rule = config.serverRules.filter {
+            it.authority.matches(authority) && it.enabled
+        }.firstOrNull()
 
-        return channels.getOrPut(rewriteAuthority) {
-            ManagedChannelBuilder.forTarget(rewriteAuthority).intercept(ReflectionAuth(rules)).usePlaintext().build()
+        val rewriteAuthority = rule?.takeIf { it.replaceEnabled && it.replace.isNotEmpty() }?.replace ?: authority
+
+        val rewriteEnable = rule?.replaceEnabled == true && rule.replace.isNotEmpty()
+        val rewriteBackendSsl = rule?.replaceSsl ?: false
+
+        return channels.getOrPut("http${if (ssl) "s" else ""}://$rewriteAuthority") {
+            ManagedChannelBuilder.forTarget(rewriteAuthority)
+                .intercept(ReflectionAuth(rule))
+                .apply {
+                    if ((rewriteEnable && rewriteBackendSsl) || (!rewriteEnable && ssl)) {
+                        useTransportSecurity()
+                    } else {
+                        usePlaintext()
+                    }
+                }
+                .build()
         }
     }
 
-    fun replayChannel(authority: String): io.grpc.Channel {
-        return replayChannels.getOrPut(authority) {
+    fun replayChannel(authority: String, ssl: Boolean): io.grpc.Channel {
+        return replayChannels.getOrPut("http${if (ssl) "s" else ""}://$authority") {
             ManagedChannelBuilder.forTarget(authority).proxyDetector {
                 HttpConnectProxiedSocketAddress.newBuilder().setTargetAddress(it as InetSocketAddress).setProxyAddress(
                     InetSocketAddress(
                         "127.0.0.1", config.proxyPort
                     )
                 ).build()
-            }.usePlaintext().build().apply {
+            }.apply {
+                if (ssl) {
+                    useTransportSecurity()
+                } else {
+                    usePlaintext()
+                }
+            }.build().apply {
                 this.notifyWhenStateChanged(
                     ConnectivityState.CONNECTING,
                     {
@@ -78,9 +93,9 @@ class ServerManager(vm: MainViewModel, private val config: MediatorConfiguration
         }
     }
 
-    fun reflection(authority: String): StatefulProtoReflection {
-        return reflections.getOrPut(authority) {
-            StatefulProtoReflection(channel(authority)).apply {
+    fun reflection(authority: String, ssl: Boolean): StatefulProtoReflection {
+        return reflections.getOrPut("http${if (ssl) "s" else ""}://$authority") {
+            StatefulProtoReflection(channel(authority, ssl)).apply {
                 ProtobufBooster.boost(this)
             }
         }

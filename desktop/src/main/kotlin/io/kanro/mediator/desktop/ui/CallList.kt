@@ -48,6 +48,7 @@ import io.kanro.compose.jetbrains.control.JPanelBorder
 import io.kanro.compose.jetbrains.control.ListItemHoverIndication
 import io.kanro.compose.jetbrains.control.Text
 import io.kanro.compose.jetbrains.control.jBorder
+import io.kanro.mediator.desktop.model.CallEvent
 import io.kanro.mediator.desktop.model.CallTimeline
 import io.kanro.mediator.desktop.model.asState
 import io.kanro.mediator.desktop.viewmodel.MainViewModel
@@ -71,8 +72,11 @@ fun CallList(modifier: Modifier = Modifier) {
             Text("Wait for incoming request...", Modifier.align(Alignment.Center))
         } else {
             val itemCount = listState.layoutInfo.totalItemsCount
-            if (itemCount == calls.size) {
-                requestToEnd = listState.isScrolledToTheEnd()
+
+            LaunchedEffect(calls.size) {
+                if (requestToEnd) {
+                    listState.scrollToItem(itemCount - 1)
+                }
             }
 
             LazyColumn(state = listState) {
@@ -82,9 +86,11 @@ fun CallList(modifier: Modifier = Modifier) {
                             0 -> {
                                 idWidth += delta.dp
                             }
+
                             1 -> {
                                 authorityWidth += delta.dp
                             }
+
                             2 -> {
                                 costWidth -= delta.dp
                             }
@@ -92,25 +98,17 @@ fun CallList(modifier: Modifier = Modifier) {
                     }
                 }
 
-                var scrolling = false
                 items(calls) { x ->
                     CallRow(idWidth, authorityWidth, costWidth, x, selected == x) {
                         selected = x
                     }
+                }
 
-                    if (requestToEnd && !scrolling && !listState.isScrollInProgress) {
-                        val targetIndex = itemCount - 1
-                        if (targetIndex > 0) {
-                            LaunchedEffect(Unit) {
-                                scrolling = true
-                                listState.scrollToItem(targetIndex)
-                            }
-                        }
-                    }
+                if (itemCount == calls.size) {
+                    requestToEnd = listState.isScrolledToTheEnd()
                 }
             }
 
-            calls.count() + 1
             VerticalScrollbar(
                 rememberScrollbarAdapter(listState),
                 Modifier.align(Alignment.CenterEnd)
@@ -226,40 +224,60 @@ fun CallRow(
                 Text(call.id, Modifier.padding(start = 7.dp), maxLines = 1)
             }
             JPanelBorder(Modifier.width(1.dp).fillMaxHeight())
-            Box(Modifier.width(authorityWidth)) {
-                val rewriteMark = if (start.authority == start.resolvedAuthority) {
-                    ""
+            Row(Modifier.width(authorityWidth)) {
+                Spacer(Modifier.width(7.dp))
+                if (start != null) {
+                    val rewriteMark = if (start.authority == start.resolvedAuthority) {
+                        ""
+                    } else {
+                        "*"
+                    }
+                    if (start.ssl) {
+                        Icon("icons/ssl.svg")
+                    }
+                    Text(start.authority + rewriteMark, maxLines = 1)
                 } else {
-                    "*"
+                    Text(call.first<CallEvent.Transparent>()!!.authority, maxLines = 1)
                 }
-                Text(start.authority + rewriteMark, Modifier.padding(start = 7.dp), maxLines = 1)
             }
             JPanelBorder(Modifier.width(1.dp).fillMaxHeight())
             Box(Modifier.width(0.dp).weight(1f)) {
-                Text(start.method, Modifier.padding(start = 7.dp), maxLines = 1)
+                if (start != null) {
+                    Text(start.method, Modifier.padding(start = 7.dp), maxLines = 1)
+                } else {
+                    Text("-", Modifier.padding(start = 7.dp), maxLines = 1)
+                }
             }
             JPanelBorder(Modifier.width(1.dp).fillMaxHeight())
             Box(Modifier.width(costWidth)) {
-                Text(call.cost(), Modifier.padding(start = 7.dp), maxLines = 1)
+                if (start != null) {
+                    Text(call.cost(), Modifier.padding(start = 7.dp), maxLines = 1)
+                } else {
+                    Text("-", Modifier.padding(start = 7.dp), maxLines = 1)
+                }
             }
         }
     }
 }
 
 fun CallTimeline.cost(): String {
+    val start = start()!!
     val close = close() ?: return "Running..."
-    val duration = close.timestamp() - start().timestamp()
+    val duration = close.timestamp() - start.timestamp()
     val cost = duration.toTime(TimeUnit.NANOSECONDS)
     return when {
         cost < TimeUnit.MICROSECONDS.toNanos(1) -> {
             "${cost}ns"
         }
+
         cost < TimeUnit.MILLISECONDS.toNanos(1) -> {
             "${cost / 1000.0}µs"
         }
+
         cost < TimeUnit.SECONDS.toNanos(1) -> {
             String.format("%.3fms", cost / 1000000.0)
         }
+
         else -> {
             String.format("%.3fs", cost / 1000000000.0)
         }
@@ -269,31 +287,37 @@ fun CallTimeline.cost(): String {
 @Composable
 fun CallIcon(call: CallTimeline, modifier: Modifier = Modifier) {
     val status = call.close()?.status
+    val start = call.start()
     Box(Modifier.size(23.dp), contentAlignment = Alignment.Center) {
-        when (status?.code) {
-            Status.Code.OK -> Icon("icons/toolbarPassed.svg")
+        if (start == null) {
+            Icon("icons/ssl_undecoded.svg")
+        } else {
+            when (status?.code) {
+                Status.Code.OK -> Icon("icons/toolbarPassed.svg")
 
-            Status.Code.ABORTED,
-            Status.Code.CANCELLED -> Icon("icons/toolbarTerminated.svg")
+                Status.Code.ABORTED,
+                Status.Code.CANCELLED -> Icon("icons/toolbarTerminated.svg")
 
-            Status.Code.DEADLINE_EXCEEDED,
-            Status.Code.PERMISSION_DENIED,
-            Status.Code.UNAUTHENTICATED -> Icon("icons/toolbarSkipped.svg")
+                Status.Code.DEADLINE_EXCEEDED,
+                Status.Code.PERMISSION_DENIED,
+                Status.Code.UNAUTHENTICATED -> Icon("icons/toolbarSkipped.svg")
 
-            Status.Code.ALREADY_EXISTS,
-            Status.Code.RESOURCE_EXHAUSTED,
-            Status.Code.FAILED_PRECONDITION,
-            Status.Code.OUT_OF_RANGE,
-            Status.Code.UNAVAILABLE,
-            Status.Code.INVALID_ARGUMENT -> Icon("icons/toolbarFailed.svg")
+                Status.Code.ALREADY_EXISTS,
+                Status.Code.RESOURCE_EXHAUSTED,
+                Status.Code.FAILED_PRECONDITION,
+                Status.Code.OUT_OF_RANGE,
+                Status.Code.UNAVAILABLE,
+                Status.Code.INVALID_ARGUMENT -> Icon("icons/toolbarFailed.svg")
 
-            Status.Code.DATA_LOSS,
-            Status.Code.NOT_FOUND -> Icon("icons/testUnknown.svg")
+                Status.Code.DATA_LOSS,
+                Status.Code.NOT_FOUND -> Icon("icons/testUnknown.svg")
 
-            Status.Code.UNIMPLEMENTED,
-            Status.Code.UNKNOWN,
-            Status.Code.INTERNAL -> Icon("icons/toolbarError.svg")
-            else -> Icon("icons/run.svg")
+                Status.Code.UNIMPLEMENTED,
+                Status.Code.UNKNOWN,
+                Status.Code.INTERNAL -> Icon("icons/toolbarError.svg")
+
+                else -> Icon("icons/run.svg")
+            }
         }
     }
 }

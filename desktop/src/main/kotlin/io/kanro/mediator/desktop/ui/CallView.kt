@@ -76,8 +76,7 @@ fun CallView(call: CallTimeline?) {
         JPanelBorder(Modifier.fillMaxWidth().height(1.dp).align(Alignment.BottomStart))
 
         Box(
-            Modifier.matchParentSize()
-                .pointerHoverIcon(PointerIcon(Cursor.getPredefinedCursor(Cursor.N_RESIZE_CURSOR)))
+            Modifier.matchParentSize().pointerHoverIcon(PointerIcon(Cursor.getPredefinedCursor(Cursor.N_RESIZE_CURSOR)))
                 .draggable(
                     orientation = Orientation.Vertical,
                     state = rememberDraggableState { delta ->
@@ -141,22 +140,33 @@ fun StatisticsView(call: CallTimeline) {
             selectedKey = 0
         }
         val start = call.start()
-        MetadataItem("Host", start.resolvedAuthority, selectedKey == 1) {
-            selectedKey = 1
-        }
-        MetadataItem("Authority", start.authority, selectedKey == 2) {
-            selectedKey = 2
-        }
-        MetadataItem("Method", start.method, selectedKey == 3) {
-            selectedKey = 3
-        }
-        MetadataItem("Start time", start.timestamp().string(), selectedKey == 4) {
-            selectedKey = 4
+        if (start != null) {
+            MetadataItem("Host", start.resolvedAuthority, selectedKey == 1) {
+                selectedKey = 1
+            }
+            MetadataItem("Authority", start.authority, selectedKey == 2) {
+                selectedKey = 2
+            }
+            MetadataItem("Method", start.method, selectedKey == 3) {
+                selectedKey = 3
+            }
+            MetadataItem("Start time", start.timestamp().string(), selectedKey == 4) {
+                selectedKey = 4
+            }
         }
         val close = call.close()
         if (close != null) {
             MetadataItem("End time", close.timestamp().string(), selectedKey == 5) {
                 selectedKey = 5
+            }
+        }
+        val transparent = call.first<CallEvent.Transparent>()
+        if (transparent != null) {
+            MetadataItem("Authority", transparent.authority, selectedKey == 6) {
+                selectedKey = 6
+            }
+            MetadataItem("Start time", transparent.timestamp().string(), selectedKey == 7) {
+                selectedKey = 7
             }
         }
     }
@@ -239,6 +249,7 @@ fun TimelineItemRow(
                     )
                 }
             }
+
             is CallEvent.Accept -> {
                 result += ContextMenuItem("Copy Headers") {
                     Toolkit.getDefaultToolkit().systemClipboard.setContents(
@@ -249,6 +260,7 @@ fun TimelineItemRow(
                     )
                 }
             }
+
             is CallEvent.Close -> {
                 result += ContextMenuItem("Copy Trails") {
                     Toolkit.getDefaultToolkit().systemClipboard.setContents(
@@ -259,6 +271,7 @@ fun TimelineItemRow(
                     )
                 }
             }
+
             is CallEvent.Input -> {
                 val json = timeline.reflection().invoke {
                     event.message().toJson()
@@ -269,6 +282,7 @@ fun TimelineItemRow(
                     )
                 }
             }
+
             is CallEvent.Output -> {
                 val json = timeline.reflection().invoke {
                     event.message().toJson()
@@ -300,6 +314,7 @@ fun TimelineItemRow(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 val icon = when (event) {
+                    is CallEvent.Transparent -> "icons/testUnknown.svg"
                     is CallEvent.Accept -> "icons/reviewAccepted.svg"
                     is CallEvent.Close -> "icons/reviewRejected.svg"
                     is CallEvent.Input -> "icons/showWriteAccess.svg"
@@ -307,6 +322,7 @@ fun TimelineItemRow(
                     is CallEvent.Start -> "icons/connector.svg"
                 }
                 val text = when (event) {
+                    is CallEvent.Transparent -> "Transparent"
                     is CallEvent.Accept -> "Server Accepted"
                     is CallEvent.Close -> "Closed"
                     is CallEvent.Input -> "Client Messaging"
@@ -373,10 +389,12 @@ fun EventView(call: CallTimeline, event: CallEvent) {
                     message != null -> {
                         Text(message)
                     }
+
                     serverManager != null -> {
                         ProgressBar()
                         Text("Resolving...")
                     }
+
                     else -> {
                         Text("Need start proxy server to resolve calls")
                     }

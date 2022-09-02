@@ -62,8 +62,11 @@ fun FilterBox(modifier: Modifier = Modifier) {
                 filter = it
                 shownCalls.clear()
                 shownCalls += calls.filter {
-                    val start = it.start()
-                    filter.isEmpty() || start.authority.contains(filter) || start.method.contains(filter)
+                    it.start()?.let {
+                        filter.isEmpty() || it.authority.contains(filter) || it.method.contains(filter)
+                    } ?: it.first<CallEvent.Transparent>()?.let {
+                        filter.isEmpty() || it.authority.contains(filter)
+                    } ?: false
                 }
             },
             modifier = Modifier.width(0.dp).weight(2f).fillMaxHeight()
@@ -109,9 +112,10 @@ fun FilterBox(modifier: Modifier = Modifier) {
                             val call = MainViewModel.selectedCall.value ?: return@runBlocking
                             call.close() ?: return@runBlocking
 
-                            val start = call.start()
+                            val start = call.start() ?: return@runBlocking
                             val channel =
-                                MainViewModel.serverManager?.replayChannel(start.authority) ?: return@runBlocking
+                                MainViewModel.serverManager?.replayChannel(start.authority, start.ssl)
+                                    ?: return@runBlocking
 
                             val clientCall = channel.newCall(
                                 MethodDescriptor.newBuilder<ByteArray, ByteArray>()
@@ -153,7 +157,7 @@ fun FilterBox(modifier: Modifier = Modifier) {
                             clientCall.request(1)
                         }
                     },
-                    enabled = MainViewModel.selectedCall.value?.close() != null
+                    enabled = MainViewModel.selectedCall.value?.start() != null && MainViewModel.selectedCall.value?.close() != null
                 ) {
                     Icon("icons/reRun.svg", "Replay Request")
                 }

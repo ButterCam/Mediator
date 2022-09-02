@@ -11,7 +11,26 @@ import io.grpc.Metadata
 import io.grpc.Status
 
 sealed interface CallEvent : ChangedInteraction {
+    class Transparent(
+        val authority: String,
+    ) : CallEvent {
+        private val timestamp = Timestamp.now()
+
+        override fun timestamp(): Timestamp {
+            return timestamp
+        }
+
+        override fun resolve(timeline: CallTimeline): Boolean {
+            return false
+        }
+
+        override fun resolved(): Boolean {
+            return true
+        }
+    }
+
     class Start(
+        val ssl: Boolean,
         val authority: String,
         val resolvedAuthority: String,
         val method: String,
@@ -35,9 +54,9 @@ sealed interface CallEvent : ChangedInteraction {
         override fun resolve(timeline: CallTimeline): Boolean {
             if (methodDescriptor == null) {
                 val service =
-                    timeline.reflection().findServiceSupport(".${timeline.start().method.substringBeforeLast('/')}")
+                    timeline.reflection().findServiceSupport(".${timeline.start()!!.method.substringBeforeLast('/')}")
                 methodDescriptor =
-                    service.descriptor.method.first { it.name == timeline.start().method.substringAfterLast('/') }
+                    service.descriptor.method.first { it.name == timeline.start()!!.method.substringAfterLast('/') }
                 return true
             }
             return false
@@ -83,7 +102,7 @@ sealed interface CallEvent : ChangedInteraction {
         override fun resolve(timeline: CallTimeline): Boolean {
             if (parsedMessage == null) {
                 timeline.reflection().invoke {
-                    val input = timeline.reflection().findMessageSupport(timeline.start().descriptor().inputType)
+                    val input = timeline.reflection().findMessageSupport(timeline.start()!!.descriptor().inputType)
                     parsedMessage = input.parse(message)
                 }
                 return true
@@ -115,7 +134,7 @@ sealed interface CallEvent : ChangedInteraction {
         override fun resolve(timeline: CallTimeline): Boolean {
             if (parsedMessage == null) {
                 timeline.reflection().invoke {
-                    val output = timeline.reflection().findMessageSupport(timeline.start().descriptor().outputType)
+                    val output = timeline.reflection().findMessageSupport(timeline.start()!!.descriptor().outputType)
                     parsedMessage = output.parse(message)
                 }
                 return true

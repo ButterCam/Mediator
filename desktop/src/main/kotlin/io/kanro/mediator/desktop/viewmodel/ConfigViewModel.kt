@@ -1,7 +1,6 @@
 package io.kanro.mediator.desktop.viewmodel
 
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.neverEqualPolicy
 import androidx.compose.runtime.toMutableStateList
 import io.kanro.compose.jetbrains.JBThemeStyle
 import io.kanro.mediator.desktop.model.MediatorConfiguration
@@ -10,11 +9,11 @@ class ConfigViewModel(
     theme: JBThemeStyle?,
     proxyPort: Int,
     serverRules: List<ServerRuleViewModel>,
-    requestRules: List<RequestRuleViewModel>
+    requestRules: List<RequestRuleViewModel>,
 ) {
-    val proxyPort = mutableStateOf(proxyPort.toString(), policy = neverEqualPolicy())
+    val proxyPort = mutableStateOf(proxyPort.toString())
 
-    val theme = mutableStateOf(theme, policy = neverEqualPolicy())
+    val theme = mutableStateOf(theme)
 
     val changed = mutableStateOf(false)
 

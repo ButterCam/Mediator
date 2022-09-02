@@ -6,10 +6,12 @@ import io.grpc.Metadata
 import io.grpc.Status
 import io.kanro.mediator.desktop.model.CallTimeline
 import io.kanro.mediator.desktop.model.MediatorConfiguration
+import io.kanro.mediator.desktop.model.MediatorSslConfig
 import io.kanro.mediator.desktop.model.MethodType
 import io.kanro.mediator.desktop.viewmodel.MainViewModel
 import io.kanro.mediator.netty.GrpcCallDefinitions
 import io.kanro.mediator.netty.GrpcProxySupport
+import io.kanro.mediator.netty.backend.GrpcSslProxyChannelInitializer
 import io.netty.bootstrap.Bootstrap
 import io.netty.buffer.ByteBuf
 import io.netty.channel.Channel
@@ -18,26 +20,76 @@ import io.netty.handler.codec.http2.Http2DataFrame
 import io.netty.handler.codec.http2.Http2Headers
 import io.netty.handler.codec.http2.Http2HeadersFrame
 import io.netty.handler.codec.http2.Http2StreamChannel
+import io.netty.handler.ssl.ApplicationProtocolConfig
+import io.netty.handler.ssl.ApplicationProtocolNames
+import io.netty.handler.ssl.SslContext
+import io.netty.handler.ssl.SslContextBuilder
 import io.netty.util.AttributeKey
 import java.io.ByteArrayInputStream
+import java.security.cert.X509Certificate
 import kotlin.math.min
 
-class MediatorGrpcProxySupport(private val config: MediatorConfiguration) : GrpcProxySupport {
+class MediatorGrpcProxySupport(private val config: MediatorConfiguration, private val sslConfig: MediatorSslConfig) :
+    GrpcProxySupport {
+
+    override fun connectToBackendTransparent(
+        frontend: Channel,
+        backendBootstrap: Bootstrap,
+        target: String
+    ): ChannelFuture {
+        val timeline = CallTimeline()
+        frontend.attr(TIMELINE_KEY).set(timeline)
+        timeline.transparent(target)
+        MainViewModel.calls += timeline
+        val filter = MainViewModel.filter.value
+        if (filter.isEmpty() || target.contains(filter)) {
+            MainViewModel.shownCalls += timeline
+        }
+        val (host, port) = target.split(":")
+        return backendBootstrap.connect(host, port.toInt())
+    }
+
     override fun connectToBackend(frontend: Channel, backendBootstrap: Bootstrap, target: String): ChannelFuture {
-        val rules = config.serverRules.filter {
-            it.authority.matches(target)
-        }
-        val rewriteAuthority = rules.fold(target) { r, it ->
-            if (it.enabled && it.replaceEnabled && it.replace.isNotBlank()) {
-                it.authority.replace(target, it.replace)
-            } else r
-        }
+        val rule = config.serverRules.filter {
+            it.authority.matches(target) && it.enabled
+        }.firstOrNull()
+
+        val rewriteAuthority = rule?.takeIf { it.replaceEnabled && it.replace.isNotEmpty() }?.replace ?: target
 
         val (host, port) = rewriteAuthority.split(":")
 
-        frontend.attr(REWRITE_AUTHORITY_KEY).set(rewriteAuthority)
+        val rewriteEnable = rule?.replaceEnabled == true && rule.replace.isNotEmpty()
+        val rewriteBackendSsl = rule?.replaceSsl ?: false
+        val frontendSsl = frontend.attr(GrpcProxySupport.FRONTEND_SSL_ENABLE_KEY).get()
 
+        if ((rewriteEnable && rewriteBackendSsl) || (!rewriteEnable && frontendSsl)) {
+            backendBootstrap.handler(GrpcSslProxyChannelInitializer())
+            frontend.attr(GrpcProxySupport.BACKEND_SSL_ENABLE_KEY).set(true)
+        }
+
+        frontend.attr(REWRITE_AUTHORITY_KEY).set(rewriteAuthority)
         return backendBootstrap.connect(host, port.toInt())
+    }
+
+    override fun sslContext(frontend: Channel, target: String): SslContext? {
+        config.serverRules.filter {
+            it.authority.matches(target) && it.enabled
+        }.firstOrNull() ?: return null
+        val name = target.substringBeforeLast(':')
+        val (cert, keyPair) = sslConfig.getCert(name)
+        return SslContextBuilder.forServer(keyPair.private, cert, sslConfig.caRoot).applicationProtocolConfig(
+            ApplicationProtocolConfig(
+                ApplicationProtocolConfig.Protocol.ALPN,
+                ApplicationProtocolConfig.SelectorFailureBehavior.NO_ADVERTISE,
+                ApplicationProtocolConfig.SelectedListenerFailureBehavior.ACCEPT,
+                ApplicationProtocolNames.HTTP_2,
+                ApplicationProtocolNames.HTTP_1_1
+            )
+        ).build()
+    }
+
+    override fun getCertificateAuthority(): X509Certificate {
+        return sslConfig.caRoot
     }
 
     override fun onRequestHeader(
@@ -50,6 +102,7 @@ class MediatorGrpcProxySupport(private val config: MediatorConfiguration) : Grpc
         val headers = frame.headers()
         fs.attr(REQUEST_READER_KEY).set(GrpcMessageReader(headers[GrpcCallDefinitions.GRPC_CODING_HEADER]?.toString()))
         timeline.start(
+            fs.parent().attr(GrpcProxySupport.FRONTEND_SSL_ENABLE_KEY).get(),
             headers.authority().toString(),
             fs.parent().attr(REWRITE_AUTHORITY_KEY).get(),
             headers.path().substring(1),
@@ -58,7 +111,9 @@ class MediatorGrpcProxySupport(private val config: MediatorConfiguration) : Grpc
         )
         MainViewModel.calls += timeline
         val filter = MainViewModel.filter.value
-        if (filter.isEmpty() || timeline.start().authority.contains(filter) || timeline.start().method.contains(filter)
+        if (filter.isEmpty() || timeline.start()!!.authority.contains(filter) || timeline.start()!!.method.contains(
+                filter
+            )
         ) {
             MainViewModel.shownCalls += timeline
         }
@@ -130,17 +185,19 @@ class MediatorGrpcProxySupport(private val config: MediatorConfiguration) : Grpc
         }
 
         val timeline = fs.attr(TIMELINE_KEY).get()
-        timeline.close(status, Metadata().apply {
-            put("grpc-status".stringKey(), status.code.value().toString())
-            put("grpc-message".stringKey(), status.description)
-        })
+        timeline.close(
+            status,
+            Metadata().apply {
+                put("grpc-status".stringKey(), status.code.value().toString())
+                put("grpc-message".stringKey(), status.description)
+            }
+        )
     }
 
     companion object {
         val REWRITE_AUTHORITY_KEY =
             AttributeKey.valueOf<String>(MediatorGrpcProxySupport::class.java, "rewriteAuthority")
-        val TIMELINE_KEY =
-            AttributeKey.valueOf<CallTimeline>(MediatorGrpcProxySupport::class.java, "timeline")
+        val TIMELINE_KEY = AttributeKey.valueOf<CallTimeline>(MediatorGrpcProxySupport::class.java, "timeline")
         val REQUEST_READER_KEY =
             AttributeKey.valueOf<GrpcMessageReader>(MediatorGrpcProxySupport::class.java, "request-reader")
         val RESPONSE_READER_KEY =

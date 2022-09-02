@@ -65,7 +65,7 @@ compose.desktop {
                 dockName = "Mediator"
                 iconFile.set(project.file("./src/main/resources/icon.icns"))
 
-                val appleId = notarization.appleID.orNull ?: System.getenv("NOTARIZATION_APPLEID") ?: "higan@live.cn"
+                val appleId = notarization.appleID.orNull ?: System.getenv("NOTARIZATION_APPLEID")
 
                 if (appleId != null) {
                     signing {

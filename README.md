@@ -21,7 +21,8 @@ Build with [Netty](https://netty.io/) (proxy protocol), [Compose Desktop](https:
 ✅ **Cross-platform**, works on all your favorite platforms like Windows, macOS, Linux  
 ✅ **Jetbrains Style GUI**, easily integrating into your desktop  
 ✅ **Host Rewrite**, redirect the request to beta or test server without modifying client code  
-✅ **Server Reflection Support**, parsing gRPC request and response message
+✅ **Server Reflection Support**, parsing gRPC request and response message  
+✅ **HTTPS Support**, decode gRPC/HTTPS requests
 
 ## Quick Start
 
@@ -33,7 +34,7 @@ MSI for Windows, Dmg for macOS, Dmg(aarch64) for macOS(Apple Silicon), deb for L
 
 ### Run
 
-Open the mediator app, the proxy server will listen 8888 port, the internal gRPC server will listen 9999 port by default.
+Open the mediator app, the proxy server will listen 8888 port by default.
 
 ### Config Client
 
@@ -90,9 +91,32 @@ func main() {
 }
 ```
 
+### HTTPS Support
+
+Mediator will try to decode the gRPC/HTTPS request when server rule matched.
+
+You need download the Mediator Root Certificate and install it to your client just like charles or fiddler.
+
+The Mediator Root Certificate will be generated when you launch the Mediator app first-time.
+
+You can download the Mediator Root Certificate by visit `http://<YOUR PC/MAC IP>:8887/mediatorRoot.cer`.
+
+> Note:  
+> To prevent abuse of the same root certificate, each Mediator installation generates a different root certificate.
+
+#### Install Mediator Root Certificate for JDK
+
+JDK will not trust the Mediator Root Certificate by default even you install it to system.
+
+You can find the JDK keystore file in `$JAVA_HOME/jre/lib/security/cacerts` or `$JAVA_HOME/lib/security/cacerts`.
+
+Then import the Mediator Root Certificate to JDK cacerts file
+by `keytool -import -keystore $JAVA_HOME/lib/security/cacerts -file mediatorRoot.cer` command.
+
 ### Resolve messages
 
-Mediator support renders message as JSON tree if your server supports the [Server Reflection](https://github.com/grpc/grpc/blob/master/doc/server-reflection.md).
+Mediator support renders message as JSON tree if your server supports
+the [Server Reflection](https://github.com/grpc/grpc/blob/master/doc/server-reflection.md).
 
 If you need to append the metadata to Server Reflection Request, you should config your server rule in settings.
 

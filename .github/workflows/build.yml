@@ -40,7 +40,7 @@ jobs:
       - name: Setup Java
         uses: actions/setup-java@v2
         with:
-          java-version: 16
+          java-version: 17
           distribution: 'adopt'
 
       # Check out current repository

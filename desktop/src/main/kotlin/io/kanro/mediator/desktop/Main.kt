@@ -14,6 +14,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.MenuBar
 import androidx.compose.ui.window.Window
@@ -39,7 +40,7 @@ fun main() {
 
         Window(
             title = "Mediator",
-            state = rememberWindowState(),
+            state = rememberWindowState(size = DpSize(900.dp, 700.dp)),
             onCloseRequest = {
                 MainViewModel.recoding.value = false
                 MainViewModel.serverManager?.stop()

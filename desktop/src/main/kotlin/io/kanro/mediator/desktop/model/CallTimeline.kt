@@ -30,7 +30,18 @@ class CallTimeline(val id: String = (counter++).toString()) : BaseObservableObje
         return event
     }
 
+    fun transparent(
+        authority: String
+    ): CallEvent.Transparent {
+        return emit(
+            CallEvent.Transparent(
+                authority
+            )
+        )
+    }
+
     fun start(
+        ssl: Boolean,
         authority: String,
         resolvedAuthority: String,
         method: String,
@@ -39,6 +50,7 @@ class CallTimeline(val id: String = (counter++).toString()) : BaseObservableObje
     ): CallEvent.Start {
         return emit(
             CallEvent.Start(
+                ssl,
                 authority,
                 resolvedAuthority,
                 method,
@@ -65,8 +77,9 @@ class CallTimeline(val id: String = (counter++).toString()) : BaseObservableObje
     }
 
     fun resolve(): Boolean {
+        val start = start() ?: return false
         if (reflection == null) {
-            reflection = MainViewModel.serverManager?.reflection(start().authority)?.collect()
+            reflection = MainViewModel.serverManager?.reflection(start.authority, start.ssl)?.collect()
         }
         if (reflection == null) return false
         events.forEach {
@@ -88,8 +101,8 @@ class CallTimeline(val id: String = (counter++).toString()) : BaseObservableObje
         return null
     }
 
-    fun start(): CallEvent.Start {
-        return first()!!
+    fun start(): CallEvent.Start? {
+        return first()
     }
 
     fun close(): CallEvent.Close? {
