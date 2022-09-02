@@ -105,6 +105,12 @@ You can download the Mediator Root Certificate by visit `http://<YOUR PC/MAC IP>
 > To prevent abuse of the same root certificate, each Mediator installation generates a different root certificate.  
 > You need reinstall the Mediator Root Certificate when you use different Mediator installation.
 
+> Tips:  
+> Mediator provide multi format of Root Certificate, you can choose the format you like.
+> - `/mediatorRoot.cer` - DER format
+> - `/mediatorRoot.crt` - PEM format
+> - `/mediatorRoot.pem` - PEM format
+
 #### Install Mediator Root Certificate for JDK
 
 JDK will not trust the Mediator Root Certificate by default even you install it to system.
@@ -113,6 +119,21 @@ You can find the JDK keystore file in `$JAVA_HOME/jre/lib/security/cacerts` or `
 
 Then import the Mediator Root Certificate to JDK cacerts file
 by `keytool -import -keystore $JAVA_HOME/lib/security/cacerts -file mediatorRoot.cer` command.
+
+#### Install Mediator Root Certificate for Android
+
+Download the Mediator Root Certificate in browser by visit `http://<YOUR PC/MAC IP>:8888/mediatorRoot.cer` on your
+Android device.
+
+Check [this guide](https://support.google.com/pixelphone/answer/2844832?hl=en) to install it to your device.
+
+#### Install Mediator Root Certificate for iOS
+
+gRPC ObjectC client will not trust the Mediator Root Certificate by default even you install it to system.
+
+You need pass the PEM format certificate to the `[GRPCCallOptions setPEMRootCertificates: cert]` method.
+
+Download the PEM format certificate by `http://<YOUR PC/MAC IP>:8888/mediatorRoot.pem`.
 
 ### Resolve messages
 

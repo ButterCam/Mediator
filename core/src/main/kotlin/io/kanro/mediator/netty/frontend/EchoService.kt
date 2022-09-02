@@ -7,17 +7,39 @@ import io.netty.handler.codec.http.HttpMethod
 import io.netty.handler.codec.http.HttpRequest
 import io.netty.handler.codec.http.HttpResponse
 import io.netty.handler.codec.http.HttpResponseStatus
+import org.bouncycastle.openssl.jcajce.JcaPEMWriter
+import java.io.StringWriter
+import java.nio.charset.Charset
 
 object EchoService {
     fun buildEchoResponse(context: ChannelHandlerContext, request: HttpRequest): HttpResponse {
-        if (request.method() == HttpMethod.GET && request.uri() == "/mediatorRoot.cer") {
+        if (request.method() == HttpMethod.GET) {
             val support = context.channel().attr(GrpcProxySupport.KEY).get()
             val certificate = support.getCertificateAuthority()
-            return DefaultFullHttpResponse(
-                request.protocolVersion(),
-                HttpResponseStatus.OK,
-                context.alloc().buffer().writeBytes(certificate.encoded).retain()
-            )
+            when (request.uri()) {
+                "/mediatorRoot.cer" -> {
+                    return DefaultFullHttpResponse(
+                        request.protocolVersion(),
+                        HttpResponseStatus.OK,
+                        context.alloc().buffer().writeBytes(certificate.encoded).retain()
+                    )
+                }
+
+                "/mediatorRoot.pem", "/mediatorRoot.crt" -> {
+                    val writer = StringWriter()
+                    JcaPEMWriter(writer).apply {
+                        writeObject(certificate)
+                        flush()
+                        close()
+                    }
+                    return DefaultFullHttpResponse(
+                        request.protocolVersion(),
+                        HttpResponseStatus.OK,
+                        context.alloc().buffer().writeBytes(writer.toString().toByteArray(Charset.defaultCharset()))
+                            .retain()
+                    )
+                }
+            }
         }
 
         val body = html {
