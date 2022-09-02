@@ -99,10 +99,11 @@ You need download the Mediator Root Certificate and install it to your client ju
 
 The Mediator Root Certificate will be generated when you launch the Mediator app first-time.
 
-You can download the Mediator Root Certificate by visit `http://<YOUR PC/MAC IP>:8887/mediatorRoot.cer`.
+You can download the Mediator Root Certificate by visit `http://<YOUR PC/MAC IP>:8888/mediatorRoot.cer`.
 
 > Note:  
-> To prevent abuse of the same root certificate, each Mediator installation generates a different root certificate.
+> To prevent abuse of the same root certificate, each Mediator installation generates a different root certificate.  
+> You need reinstall the Mediator Root Certificate when you use different Mediator installation.
 
 #### Install Mediator Root Certificate for JDK
 

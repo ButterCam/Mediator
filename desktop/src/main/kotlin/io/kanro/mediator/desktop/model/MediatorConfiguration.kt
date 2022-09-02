@@ -4,6 +4,7 @@ import com.bybutter.sisyphus.jackson.parseJson
 import com.bybutter.sisyphus.jackson.toJson
 import com.bybutter.sisyphus.security.base64
 import com.bybutter.sisyphus.security.base64Decode
+import com.fasterxml.jackson.annotation.JsonIgnore
 import com.github.fge.jackson.jsonpointer.JsonPointer
 import com.github.fge.jsonpatch.AddOperation
 import com.github.fge.jsonpatch.CopyOperation
@@ -58,6 +59,7 @@ data class MediatorSslConfig(
         }
     }
 
+    @get:JsonIgnore
     val caKeyPair: KeyPair by lazy {
         val pub = X509EncodedKeySpec(publicKey.base64Decode())
         val prv = PKCS8EncodedKeySpec(privateKey.base64Decode())
@@ -68,10 +70,12 @@ data class MediatorSslConfig(
         KeyPair(public, private)
     }
 
+    @get:JsonIgnore
     val caRoot: X509Certificate by lazy {
         CertificateFactory.getInstance("X.509").generateCertificate(ca.base64Decode().inputStream()) as X509Certificate
     }
 
+    @JsonIgnore
     private val certPool: MutableMap<String, Pair<X509Certificate, KeyPair>> = ConcurrentHashMap()
 
     fun getCert(name: String): Pair<X509Certificate, KeyPair> {
