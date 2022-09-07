@@ -137,7 +137,7 @@ Download the PEM format certificate by `http://<YOUR PC/MAC IP>:8888/mediatorRoo
 
 ### Resolve messages
 
-Mediator can render the binary message into a JSON tree, hen you have the API schema.
+Mediator can render the binary message into a JSON tree, when you have the API schema.
 
 Mediator can accept API schema in many ways.
 

@@ -1,5 +1,6 @@
 package io.kanro.mediator.internal
 
+import com.bybutter.sisyphus.io.toUnixPath
 import com.bybutter.sisyphus.protobuf.LocalProtoReflection
 import com.bybutter.sisyphus.protobuf.dynamic.DynamicFileSupport
 import com.bybutter.sisyphus.protobuf.primitives.FileDescriptorProto
@@ -53,7 +54,7 @@ class ProtoRootReflection(private val roots: List<String>) : MediatorProtoReflec
                 flattenProtos(root, it, result)
             }
         } else if (file.extension == "proto") {
-            result.add(root.relativize(file).toString())
+            result.add(root.relativize(file).toString().toUnixPath())
         }
     }
 
