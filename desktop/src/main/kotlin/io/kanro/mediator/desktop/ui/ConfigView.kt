@@ -436,7 +436,7 @@ fun ServerRuleView(vm: ConfigViewModel) {
                                         approveButtonToolTipText = "Select proto root path"
                                     }
                                     fileChooser.showOpenDialog(window)
-                                    fileChooser.selectedFile.toPath().toString()
+                                    fileChooser.selectedFile?.toPath()?.toString()
                                 }, Modifier.height(0.dp).weight(1.0f).fillMaxWidth())
                             }
                         }
@@ -449,7 +449,9 @@ fun ServerRuleView(vm: ConfigViewModel) {
                                 PathsView(vm, rule.descriptors, {
                                     val dialog = FileDialog(window, "Select", FileDialog.LOAD)
                                     dialog.isVisible = true
-                                    Path.of(dialog.directory, dialog.file).toString()
+                                    dialog.file?.let {
+                                        Path.of(dialog.directory, dialog.file).toString()
+                                    }
                                 }, Modifier.height(0.dp).weight(1.0f).fillMaxWidth())
                             }
                         }
