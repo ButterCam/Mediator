@@ -6,6 +6,8 @@ import io.grpc.HttpConnectProxiedSocketAddress
 import io.grpc.ManagedChannel
 import io.grpc.ManagedChannelBuilder
 import io.kanro.mediator.desktop.model.MediatorConfiguration
+import io.kanro.mediator.desktop.model.ProtobufSchemaSource
+import io.kanro.mediator.desktop.model.ServerRule
 import io.kanro.mediator.desktop.viewmodel.MainViewModel
 import io.kanro.mediator.netty.frontend.GrpcProxyServer
 import java.net.InetSocketAddress
@@ -24,12 +26,16 @@ class ServerManager(vm: MainViewModel, private val config: MediatorConfiguration
 
     private val replayChannels = mutableMapOf<String, ManagedChannel>()
 
-    private val reflections = mutableMapOf<String, StatefulProtoReflection>()
+    private val reflections = mutableMapOf<String, MediatorProtoReflection>()
 
-    fun channel(authority: String, ssl: Boolean): io.grpc.Channel {
-        val rule = config.serverRules.filter {
+    fun rule(authority: String): ServerRule? {
+        return config.serverRules.filter {
             it.authority.matches(authority) && it.enabled
         }.firstOrNull()
+    }
+
+    fun channel(authority: String, ssl: Boolean): io.grpc.Channel {
+        val rule = rule(authority)
 
         val rewriteAuthority = rule?.takeIf { it.replaceEnabled && it.replace.isNotEmpty() }?.replace ?: authority
 
@@ -93,10 +99,22 @@ class ServerManager(vm: MainViewModel, private val config: MediatorConfiguration
         }
     }
 
-    fun reflection(authority: String, ssl: Boolean): StatefulProtoReflection {
+    fun reflection(authority: String, ssl: Boolean): MediatorProtoReflection {
         return reflections.getOrPut("http${if (ssl) "s" else ""}://$authority") {
-            StatefulProtoReflection(channel(authority, ssl)).apply {
-                ProtobufBooster.boost(this)
+            val rule = rule(authority)
+
+            when (rule?.schemaSource) {
+                ProtobufSchemaSource.PROTO_ROOT -> ProtoRootReflection(
+                    rule.roots
+                )
+
+                ProtobufSchemaSource.FILE_DESCRIPTOR_SET -> FileDescriptorSetReflection(
+                    rule.descriptors
+                )
+
+                else -> ServerProtoReflection(channel(authority, ssl)).apply {
+                    ProtobufBooster.boost(this)
+                }
             }
         }
     }

@@ -25,6 +25,7 @@ dependencies {
     implementation("net.harawata:appdirs:1.2.1")
     implementation("com.github.java-json-tools:json-patch:1.13")
     implementation("com.github.Dansoftowner:jSystemThemeDetector:3.8")
+    implementation("com.bybutter.sisyphus.tools:sisyphus-protoc-runner:1.3.35")
 
     implementation(compose.desktop.currentOs)
     implementation(compose.uiTooling)

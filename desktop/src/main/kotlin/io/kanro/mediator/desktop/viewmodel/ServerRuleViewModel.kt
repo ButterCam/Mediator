@@ -2,6 +2,7 @@ package io.kanro.mediator.desktop.viewmodel
 
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.toMutableStateList
+import io.kanro.mediator.desktop.model.ProtobufSchemaSource
 import io.kanro.mediator.desktop.model.ServerRule
 
 class ServerRuleViewModel(
@@ -10,7 +11,10 @@ class ServerRuleViewModel(
     regex: String = "",
     replaceEnabled: Boolean = true,
     replace: String = "",
-    reflectionMetadata: Map<String, String> = mapOf()
+    schemaSource: ProtobufSchemaSource = ProtobufSchemaSource.SERVER_REFLECTION,
+    reflectionMetadata: Map<String, String> = mapOf(),
+    roots: List<String> = listOf(),
+    descriptors: List<String> = listOf()
 ) {
     constructor(serverRule: ServerRule) : this(
         serverRule.name,
@@ -18,7 +22,10 @@ class ServerRuleViewModel(
         serverRule.authority.toString(),
         serverRule.replaceEnabled,
         serverRule.replace,
-        serverRule.metadata
+        serverRule.schemaSource,
+        serverRule.metadata,
+        serverRule.roots,
+        serverRule.descriptors
     )
 
     val name = mutableStateOf(name)
@@ -33,9 +40,15 @@ class ServerRuleViewModel(
 
     val replaceSsl = mutableStateOf(false)
 
+    val schemaSource = mutableStateOf(schemaSource)
+
     val reflectionMetadata = reflectionMetadata.map {
         MetadataEntry(it.key, it.value)
     }.toMutableStateList()
+
+    val roots = roots.toMutableStateList()
+
+    val descriptors = descriptors.toMutableStateList()
 
     fun serialize(): ServerRule {
         return ServerRule(
@@ -45,7 +58,10 @@ class ServerRuleViewModel(
             replaceEnabled.value,
             replace.value,
             replaceSsl.value,
-            reflectionMetadata.filter { it.key.value.isNotEmpty() }.associate { it.key.value to it.value.value }
+            schemaSource.value,
+            reflectionMetadata.filter { it.key.value.isNotEmpty() }.associate { it.key.value to it.value.value },
+            roots.filter { it.isNotEmpty() },
+            descriptors.filter { it.isNotEmpty() }
         )
     }
 }

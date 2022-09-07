@@ -131,8 +131,17 @@ data class ServerRule(
     val replaceEnabled: Boolean = true,
     val replace: String,
     val replaceSsl: Boolean = false,
-    val metadata: Map<String, String>,
+    val schemaSource: ProtobufSchemaSource = ProtobufSchemaSource.SERVER_REFLECTION,
+    val metadata: Map<String, String> = mapOf(),
+    val roots: List<String> = listOf(),
+    val descriptors: List<String> = listOf()
 )
+
+enum class ProtobufSchemaSource {
+    SERVER_REFLECTION,
+    PROTO_ROOT,
+    FILE_DESCRIPTOR_SET,
+}
 
 data class RequestRule(
     val name: String,

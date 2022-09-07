@@ -37,6 +37,7 @@ import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
+import com.bybutter.sisyphus.coroutine.io
 import com.bybutter.sisyphus.jackson.toJson
 import com.bybutter.sisyphus.protobuf.ProtoReflection
 import com.bybutter.sisyphus.protobuf.invoke
@@ -365,13 +366,15 @@ fun EventView(call: CallTimeline, event: CallEvent) {
     val serverManager = MainViewModel.serverManager
     if (!event.resolved() && serverManager != null) {
         LaunchedEffect(call) {
-            try {
-                if (event.resolved()) return@LaunchedEffect
-                if (!call.resolve()) {
-                    resolveFailed = "Fail to resolve call"
+            io {
+                try {
+                    if (event.resolved()) return@io
+                    if (!call.resolve()) {
+                        resolveFailed = "Fail to resolve call"
+                    }
+                } catch (e: Exception) {
+                    resolveFailed = "Fail to resolve call: ${e.message}"
                 }
-            } catch (e: Exception) {
-                resolveFailed = "Fail to resolve call: ${e.message}"
             }
         }
     }

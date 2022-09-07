@@ -3,7 +3,7 @@ package io.kanro.mediator.desktop.model
 import io.grpc.Metadata
 import io.grpc.Status
 import io.kanro.mediator.desktop.viewmodel.MainViewModel
-import io.kanro.mediator.internal.StatefulProtoReflection
+import io.kanro.mediator.internal.MediatorProtoReflection
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import java.util.Deque
@@ -12,9 +12,9 @@ import java.util.concurrent.ConcurrentLinkedDeque
 class CallTimeline(val id: String = (counter++).toString()) : BaseObservableObject() {
     private val events: Deque<CallEvent> = ConcurrentLinkedDeque()
 
-    private var reflection: StatefulProtoReflection? = null
+    private var reflection: MediatorProtoReflection? = null
 
-    fun reflection(): StatefulProtoReflection {
+    fun reflection(): MediatorProtoReflection {
         return reflection ?: throw IllegalStateException("Unresolved timeline")
     }
 
@@ -79,7 +79,9 @@ class CallTimeline(val id: String = (counter++).toString()) : BaseObservableObje
     fun resolve(): Boolean {
         val start = start() ?: return false
         if (reflection == null) {
-            reflection = MainViewModel.serverManager?.reflection(start.authority, start.ssl)?.collect()
+            reflection = MainViewModel.serverManager
+                ?.reflection(start.authority, start.ssl)
+                ?.takeIf { it.resolve() }
         }
         if (reflection == null) return false
         events.forEach {

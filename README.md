@@ -21,7 +21,7 @@ Build with [Netty](https://netty.io/) (proxy protocol), [Compose Desktop](https:
 ✅ **Cross-platform**, works on all your favorite platforms like Windows, macOS, Linux  
 ✅ **Jetbrains Style GUI**, easily integrating into your desktop  
 ✅ **Host Rewrite**, redirect the request to beta or test server without modifying client code  
-✅ **Server Reflection Support**, parsing gRPC request and response message  
+✅ **Protobuf Decode Support**, parsing gRPC request and response message  
 ✅ **HTTPS Support**, decode gRPC/HTTPS requests
 
 ## Quick Start
@@ -137,17 +137,58 @@ Download the PEM format certificate by `http://<YOUR PC/MAC IP>:8888/mediatorRoo
 
 ### Resolve messages
 
-Mediator support renders message as JSON tree if your server supports
-the [Server Reflection](https://github.com/grpc/grpc/blob/master/doc/server-reflection.md).
+Mediator can render the binary message into a JSON tree, hen you have the API schema.
 
-If you need to append the metadata to Server Reflection Request, you should config your server rule in settings.
+Mediator can accept API schema in many ways.
 
-Open the `Mediator Settings`, create a server rule for your server.
+1. [Server Reflection](https://github.com/grpc/grpc/blob/master/doc/server-reflection.md), when your service supports
+   server reflection, you can parse the binary message directly, and you can add additional request metadata for server
+   reflection in the settings page.
+2. proto Source Code, you can specify multiple proto root paths and Mediator will automatically compile the included
+   proto source code into API schema.
+3. FileDescriptorSet, you can specify multiple binary message files containing the API schema with the FileDescriptorSet
+   structure.
 
-Enter the Regex in `Host pattern` input field which to match your server.
+#### Server Reflection
 
-Add the metadata in `Reflection api metadata` table.
+Before using this Schema source, please make sure your server
+supports [Server Reflection](https://github.com/grpc/grpc/blob/master/doc/server-reflection.md).
 
-Enable this rule by `Enable server rule` checkbox.
+1. Open the `Mediator Settings`, create a server rule for your server.
+2. Enter the Regex in `Host pattern` input field which to match your server.
+3. Choose the `Server reflection` schema source.
+4. **Optional** Add the metadata in `Reflection api metadata` table.
+5. Enable this rule by `Enable server rule` checkbox.
 
-![Server Rule](docs/screenshot-rule.png)
+![Server Rule](docs/screenshot-rule-server-reflection.png)
+
+#### Proto roots
+
+Mediator uses the protoc command to compile the proto file into a FileDescriptorSet message containing the API schema.
+
+1. Open the `Mediator Settings`, create a server rule for your server.
+2. Enter the Regex in `Host pattern` input field which to match your server.
+3. Choose the `Proto root` schema source.
+4. Add the root path in `Proto file roots` list.
+5. Enable this rule by `Enable server rule` checkbox.
+
+![Server Rule](docs/screenshot-rule-roots.png)
+
+#### FileDescriptorSet
+
+FileDescriptorSet is a protobuf message that contains information about the API schema and proto file structure, which
+Mediator uses to dynamically parse the message.
+
+You can use the protoc command to get the FileDescriptorSet structure by compiling the proto file.
+
+```shell
+> protoc --include_imports --include_source_info -o<tempOut.pb> -I<your-root> -I<more-root> <protofiles.proto> <more-protofiles.proto>
+```
+
+1. Open the `Mediator Settings`, create a server rule for your server.
+2. Enter the Regex in `Host pattern` input field which to match your server.
+3. Choose the `FileDescriptorSet` schema source.
+4. Add the descriptor files in `File descriptor set` list.
+5. Enable this rule by `Enable server rule` checkbox.
+
+![Server Rule](docs/screenshot-rule-descriptors.png)

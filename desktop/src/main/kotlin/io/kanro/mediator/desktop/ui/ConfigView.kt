@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.Composable
@@ -31,7 +32,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusEvent
 import androidx.compose.ui.graphics.Color
@@ -62,6 +62,7 @@ import io.kanro.compose.jetbrains.control.Text
 import io.kanro.compose.jetbrains.control.TextField
 import io.kanro.compose.jetbrains.control.jBorder
 import io.kanro.mediator.desktop.LocalWindow
+import io.kanro.mediator.desktop.model.ProtobufSchemaSource
 import io.kanro.mediator.desktop.model.RequestRule
 import io.kanro.mediator.desktop.viewmodel.ConfigViewModel
 import io.kanro.mediator.desktop.viewmodel.MainViewModel
@@ -69,10 +70,13 @@ import io.kanro.mediator.desktop.viewmodel.MetadataEntry
 import io.kanro.mediator.desktop.viewmodel.RequestRuleViewModel
 import io.kanro.mediator.desktop.viewmodel.ServerRuleViewModel
 import java.awt.Cursor
+import java.awt.Dialog
+import java.awt.FileDialog
 import java.net.NetworkInterface
+import java.nio.file.Path
+import javax.swing.JFileChooser
 
 @Composable
-@OptIn(ExperimentalComposeUiApi::class)
 fun ConfigDialog(
     vm: ConfigViewModel,
     onSave: (ConfigViewModel) -> Unit,
@@ -433,11 +437,69 @@ fun ServerRuleView(vm: ConfigViewModel) {
                         )
                     }
 
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        Text("Reflection api metadata:")
-                        MetadataView(vm, rule.reflectionMetadata, Modifier.height(0.dp).weight(1.0f).fillMaxWidth())
+                    Row(Modifier.height(28.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Text("Schema:", Modifier.width(80.dp))
+                        DropdownList(ProtobufSchemaSource.values().toList(), rule.schemaSource.value,
+                            onValueChange = {
+                                rule.schemaSource.value = it
+                                vm.changed.value = true
+                            },
+                            valueRender = {
+                                when (it) {
+                                    ProtobufSchemaSource.SERVER_REFLECTION -> "Server reflection"
+                                    ProtobufSchemaSource.PROTO_ROOT -> "Proto root"
+                                    ProtobufSchemaSource.FILE_DESCRIPTOR_SET -> "File descriptor set"
+                                    else -> it.name
+                                }
+                            })
+                    }
+
+                    val window = LocalWindow.current as Dialog
+
+                    when (rule.schemaSource.value) {
+                        ProtobufSchemaSource.SERVER_REFLECTION -> {
+                            Column(
+                                verticalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                Text("Reflection api metadata:")
+                                MetadataView(
+                                    vm,
+                                    rule.reflectionMetadata,
+                                    Modifier.height(0.dp).weight(1.0f).fillMaxWidth()
+                                )
+                            }
+                        }
+
+                        ProtobufSchemaSource.PROTO_ROOT -> {
+                            Column(
+                                verticalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                Text("Proto file roots:")
+                                PathsView(vm, rule.roots, {
+                                    val fileChooser = JFileChooser().apply {
+                                        fileSelectionMode = JFileChooser.DIRECTORIES_ONLY
+                                        dialogTitle = "Select a folder"
+                                        approveButtonText = "Select"
+                                        approveButtonToolTipText = "Select proto root path"
+                                    }
+                                    fileChooser.showOpenDialog(window)
+                                    fileChooser.selectedFile.toPath().toString()
+                                }, Modifier.height(0.dp).weight(1.0f).fillMaxWidth())
+                            }
+                        }
+
+                        ProtobufSchemaSource.FILE_DESCRIPTOR_SET -> {
+                            Column(
+                                verticalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                Text("File descriptor set:")
+                                PathsView(vm, rule.descriptors, {
+                                    val dialog = FileDialog(window, "Select", FileDialog.LOAD)
+                                    dialog.isVisible = true
+                                    Path.of(dialog.directory, dialog.file).toString()
+                                }, Modifier.height(0.dp).weight(1.0f).fillMaxWidth())
+                            }
+                        }
                     }
                 }
             } else {
@@ -577,6 +639,7 @@ fun RequestRuleView(vm: ConfigViewModel) {
                             RequestRule.Operation.COPY -> {
                                 Text("From:", Modifier.width(80.dp))
                             }
+
                             else -> {
                                 Text("Path:", Modifier.width(80.dp))
                             }
@@ -614,6 +677,7 @@ fun RequestRuleView(vm: ConfigViewModel) {
                                 )
                             }
                         }
+
                         RequestRule.Operation.COPY,
                         RequestRule.Operation.MOVE -> {
                             Row(Modifier.height(28.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -724,7 +788,6 @@ fun MetadataView(
     }
 }
 
-@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun MetadataRowHeader(
     keyWidth: Dp,
@@ -809,6 +872,107 @@ fun MetadataRow(
                     vm.changed.value = true
                 },
                 Modifier.width(0.dp).weight(1.0f).onFocusEvent {
+                    if (it.hasFocus) {
+                        onSelect()
+                    }
+                },
+                singleLine = true
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun PathsView(
+    configVm: ConfigViewModel,
+    roots: SnapshotStateList<String>,
+    onAdd: () -> String,
+    modifier: Modifier = Modifier,
+) {
+    Row(modifier.jBorder(1.dp, JBTheme.panelColors.border)) {
+        var selected by remember { mutableStateOf(-1) }
+        LazyColumn(Modifier.width(0.dp).weight(1.0f).fillMaxHeight().background(JBTheme.panelColors.bgContent)) {
+            stickyHeader {
+                Row(
+                    modifier = Modifier
+                        .height(28.dp)
+                        .fillMaxWidth()
+                        .background(JBTheme.panelColors.bgContent),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("Path", Modifier.padding(start = 7.dp))
+                }
+            }
+            itemsIndexed(roots) { index, x ->
+                PathRow(
+                    configVm,
+                    x,
+                    selected == index,
+                    {
+                        selected = index
+                    },
+                    {
+                        roots[index] = it
+                    }
+                )
+            }
+        }
+        JPanelBorder(Modifier.width(1.dp).fillMaxHeight())
+        ListToolBar(
+            list = roots,
+            selectedItem = selected.takeIf { it >= 0 },
+            orientation = Orientation.Vertical,
+            onCreate = {
+                roots += onAdd()
+                configVm.changed.value = true
+            },
+            onRemove = {
+                roots.removeAt(selected)
+                selected = -1
+                configVm.changed.value = true
+            }
+        )
+    }
+}
+
+@Composable
+fun PathRow(
+    vm: ConfigViewModel,
+    path: String,
+    selected: Boolean,
+    onSelect: () -> Unit,
+    onValueChanged: (String) -> Unit,
+    interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
+) {
+    SelectionScope(selected) {
+        Row(
+            modifier = Modifier
+                .height(24.dp)
+                .fillMaxWidth()
+                .selectable(
+                    selected = selected,
+                    interactionSource = interactionSource,
+                    indication = ListItemHoverIndication,
+                    onClick = onSelect,
+                    role = null
+                ).run {
+                    if (selected) {
+                        background(color = JBTheme.selectionColors.active)
+                    } else {
+                        this
+                    }
+                }
+                .hoverable(interactionSource),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            EmbeddedTextField(
+                path,
+                {
+                    onValueChanged(it)
+                    vm.changed.value = true
+                },
+                Modifier.fillMaxWidth().onFocusEvent {
                     if (it.hasFocus) {
                         onSelect()
                     }
