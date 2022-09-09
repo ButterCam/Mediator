@@ -189,7 +189,7 @@ With a corresponding `network_security_config.xml` in `app/src/main/res/xml/`:
 </network-security-config>
 ```
 
-2. Trust user certificates in release mode (Android 6.0 and lower).
+2. Trust user certificates in release mode (Same as Android 6.0 and lower).
 
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
