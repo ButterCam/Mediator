@@ -111,7 +111,36 @@ You can download the Mediator Root Certificate by visit `http://<YOUR PC/MAC IP>
 > - `/mediatorRoot.crt` - PEM format
 > - `/mediatorRoot.pem` - PEM format
 
+#### Use Mediator Root Certificate for Java
+
+By changing client code, you can eliminate the need to install certificates into the device.
+
+With the `Grpc` utility class, you can pass the TrustManager to the Channel.
+
+In this example, we trust all certificates, ignore all SSL error.
+
+```Kotlin
+val creds = TlsChannelCredentials.newBuilder().trustManager(object : X509TrustManager {
+    override fun getAcceptedIssuers(): Array<X509Certificate> = arrayOf()
+
+    @SuppressLint("TrustAllX509TrustManager")
+    @Throws(CertificateException::class)
+    override fun checkServerTrusted(chain: Array<X509Certificate>, authType: String) = Unit
+
+    @SuppressLint("TrustAllX509TrustManager")
+    @Throws(CertificateException::class)
+    override fun checkClientTrusted(chain: Array<X509Certificate>, authType: String) = Unit
+}).build()
+
+// Do not call `useTransportSecurity()` method, when you create channel with TlsChannelCredentials.
+Grpc.newChannelBuilder("$name:$port", creds)
+```
+
+You can also pass the specified certificate to the `trustManager` method of the `TlsChannelCredentials.Builder`.
+
 #### Install Mediator Root Certificate for JDK
+
+If you don't want to change client code, you can install the Mediator Root Certificate to your JDK.
 
 JDK will not trust the Mediator Root Certificate by default even you install it to system.
 
@@ -122,12 +151,62 @@ by `keytool -import -keystore $JAVA_HOME/lib/security/cacerts -file mediatorRoot
 
 #### Install Mediator Root Certificate for Android
 
+If you don't want change your client code, you can install the Mediator Root Certificate to your device.
+
 Download the Mediator Root Certificate in browser by visit `http://<YOUR PC/MAC IP>:8888/mediatorRoot.cer` on your
 Android device.
 
 Check [this guide](https://support.google.com/pixelphone/answer/2844832?hl=en) to install it to your device.
 
-#### Install Mediator Root Certificate for iOS
+In Android 7.0 or later, you need config the networkSecurityConfig in `app/src/main/AndroidManifest.xml` to trust user
+certificates.
+
+```xml
+<application
+        android:name=".ApplicationClass"
+        android:allowBackup="true"
+        android:hardwareAccelerated="false"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:largeHeap="true"
+        android:networkSecurityConfig="@xml/network_security_config"
+        android:supportsRtl="true"
+        android:theme="@style/AppTheme">
+```
+
+With a corresponding `network_security_config.xml` in `app/src/main/res/xml/`:
+
+1. Just trust user certificates in debug mode.
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <debug-overrides>
+        <trust-anchors>
+            <certificates src="user" />
+        </trust-anchors>
+    </debug-overrides>
+</network-security-config>
+```
+
+2. Trust user certificates in release mode (Android 6.0 and lower).
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+   <base-config cleartextTrafficPermitted="true">
+      <trust-anchors>
+         <certificates src="system" />
+         <certificates src="user" />
+      </trust-anchors>
+   </base-config>
+</network-security-config>
+```
+
+More information about
+Android's [networkSecurityConfig](https://developer.android.com/training/articles/security-config).
+
+#### Use Mediator Root Certificate for iOS
 
 gRPC ObjectC client will not trust the Mediator Root Certificate by default even you install it to system.
 
