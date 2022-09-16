@@ -1,5 +1,6 @@
 package io.kanro.mediator.netty.frontend
 
+import com.bybutter.sisyphus.rpc.Code
 import io.kanro.mediator.netty.GrpcProxySupport
 import io.kanro.mediator.netty.backend.GrpcStreamBackendHandler
 import io.netty.channel.ChannelHandler
@@ -68,5 +69,21 @@ class GrpcStreamFrontendHandler : SimpleChannelInboundHandler<Http2StreamFrame>(
         ).handler(GrpcStreamBackendHandler()).open().await().get()
         ctx.channel().attr(GrpcProxySupport.BACKEND_STREAM_CHANNEL_KEY).set(backendStream)
         super.handlerAdded(ctx)
+    }
+
+    override fun exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable?) {
+        val backend = ctx.channel().attr(GrpcProxySupport.BACKEND_STREAM_CHANNEL_KEY).get()
+        val backendStream = ctx.channel().attr(GrpcProxySupport.BACKEND_STREAM_CHANNEL_KEY).get()
+
+        ctx.close()
+        ctx.channel().parent().close()
+
+        backendStream?.close()
+        backend.close()
+
+        val support = ctx.channel().parent().attr(GrpcProxySupport.KEY).get()
+        support.onHttp2Error(
+            ctx.channel() as Http2StreamChannel, backend, ctx.channel() as Http2StreamChannel, Code.INTERNAL.number
+        )
     }
 }

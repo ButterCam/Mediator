@@ -26,6 +26,7 @@ dependencies {
     implementation("com.github.java-json-tools:json-patch:1.13")
     implementation("com.github.Dansoftowner:jSystemThemeDetector:3.8")
     implementation("com.bybutter.sisyphus.tools:sisyphus-protoc-runner:1.3.35")
+    implementation("ch.qos.logback:logback-classic:1.4.1")
 
     implementation(compose.desktop.currentOs)
     implementation(compose.uiTooling)

@@ -73,7 +73,8 @@ class GrpcOptionalSslHandler : ByteToMessageDecoder() {
     private fun handleHttp2(context: ChannelHandlerContext) {
         context.pipeline().addLast(
             Http2FrameCodecBuilder.forServer()
-                .frameLogger(Http2FrameLogger(LogLevel.INFO, GrpcStreamFrontendHandler::class.java)).build()
+                .frameLogger(Http2FrameLogger(LogLevel.INFO, GrpcStreamFrontendHandler::class.java))
+                .build()
         )
         context.pipeline().addLast(Http2MultiplexHandler(GrpcStreamFrontendHandler()))
         val support = context.channel().attr(GrpcProxySupport.KEY).get()

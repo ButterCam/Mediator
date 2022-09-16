@@ -8,7 +8,7 @@ plugins {
 
 allprojects {
     group = "io.kanro"
-    version = "1.4.2"
+    version = "1.4.3"
 
     repositories {
         mavenLocal()

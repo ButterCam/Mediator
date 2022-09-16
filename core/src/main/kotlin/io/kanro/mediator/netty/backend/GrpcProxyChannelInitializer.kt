@@ -20,8 +20,12 @@ class GrpcProxyChannelInitializer : ChannelInitializer<SocketChannel>() {
     override fun initChannel(ch: SocketChannel) {
         ch.pipeline().addLast(LoggingHandler(LogLevel.INFO)).addLast(
             Http2FrameCodecBuilder.forClient()
-                .frameLogger(Http2FrameLogger(LogLevel.INFO, GrpcStreamBackendHandler::class.java)).initialSettings(
-                    Http2Settings().pushEnabled(false).maxConcurrentStreams(0).initialWindowSize(1048576)
+                .frameLogger(Http2FrameLogger(LogLevel.INFO, GrpcStreamBackendHandler::class.java))
+                .initialSettings(
+                    Http2Settings()
+                        .pushEnabled(false)
+                        .maxConcurrentStreams(0)
+                        .initialWindowSize(1048576)
                         .maxHeaderListSize(8192)
                 ).build()
         ).addLast(Http2MultiplexHandler(GrpcStreamBackendInboundHandler()))
@@ -46,10 +50,15 @@ class GrpcSslProxyChannelInitializer : ChannelInitializer<SocketChannel>() {
             .addLast(LoggingHandler(LogLevel.INFO))
             .addLast(
                 Http2FrameCodecBuilder.forClient()
-                    .frameLogger(Http2FrameLogger(LogLevel.INFO, GrpcStreamBackendHandler::class.java)).initialSettings(
-                        Http2Settings().pushEnabled(false).maxConcurrentStreams(0).initialWindowSize(1048576)
+                    .frameLogger(Http2FrameLogger(LogLevel.INFO, GrpcStreamBackendHandler::class.java))
+                    .initialSettings(
+                        Http2Settings()
+                            .pushEnabled(false)
+                            .maxConcurrentStreams(0)
+                            .initialWindowSize(1048576)
                             .maxHeaderListSize(8192)
-                    ).build()
+                    )
+                    .build()
             ).addLast(Http2MultiplexHandler(GrpcStreamBackendInboundHandler()))
     }
 }
