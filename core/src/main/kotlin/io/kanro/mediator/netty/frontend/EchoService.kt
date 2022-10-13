@@ -16,8 +16,9 @@ object EchoService {
         if (request.method() == HttpMethod.GET) {
             val support = context.channel().attr(GrpcProxySupport.KEY).get()
             val certificate = support.getCertificateAuthority()
-            when (request.uri()) {
-                "/mediatorRoot.cer" -> {
+            val path = request.uri().substringAfterLast('/')
+            when (path) {
+                "mediatorRoot.cer" -> {
                     return DefaultFullHttpResponse(
                         request.protocolVersion(),
                         HttpResponseStatus.OK,
@@ -25,7 +26,7 @@ object EchoService {
                     )
                 }
 
-                "/mediatorRoot.pem", "/mediatorRoot.crt" -> {
+                "mediatorRoot.pem", "mediatorRoot.crt" -> {
                     val writer = StringWriter()
                     JcaPEMWriter(writer).apply {
                         writeObject(certificate)

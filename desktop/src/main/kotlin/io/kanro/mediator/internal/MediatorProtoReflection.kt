@@ -2,6 +2,7 @@ package io.kanro.mediator.internal
 
 import com.bybutter.sisyphus.io.toUnixPath
 import com.bybutter.sisyphus.protobuf.LocalProtoReflection
+import com.bybutter.sisyphus.protobuf.ProtoSupport
 import com.bybutter.sisyphus.protobuf.dynamic.DynamicFileSupport
 import com.bybutter.sisyphus.protobuf.primitives.FileDescriptorProto
 import com.bybutter.sisyphus.protobuf.primitives.FileDescriptorSet
@@ -17,27 +18,22 @@ import java.nio.file.Path
 import kotlin.io.path.extension
 
 sealed class MediatorProtoReflection : LocalProtoReflection() {
-    private var resolved = false
+    override fun findSupport(name: String): ProtoSupport<*>? {
+        super.findSupport(name)?.let { return it }
 
-    fun resolved(): Boolean {
-        return resolved
-    }
-
-    fun resolve(): Boolean {
-        if (resolved) return resolved
         synchronized(this) {
-            if (resolved) return resolved
-            resolved = doResolve()
+            runBlocking {
+                doResolve(name.trim('.'))
+            }
         }
 
-        return resolved
+        return super.findSupport(name)
     }
 
-    abstract fun doResolve(): Boolean
+    protected abstract suspend fun doResolve(name: String)
 }
 
 class ProtoRootReflection(private val roots: List<String>) : MediatorProtoReflection() {
-
     private fun flattenProtos(protoPath: List<Path>): List<String> {
         val result = mutableListOf<String>()
         protoPath.forEach { root ->
@@ -80,23 +76,21 @@ class ProtoRootReflection(private val roots: List<String>) : MediatorProtoReflec
         return FileDescriptorSet.parse(bytes)
     }
 
-    override fun doResolve(): Boolean {
+    override suspend fun doResolve(name: String) {
         generate(roots.map { Path.of(it) }).file.forEach {
             register(DynamicFileSupport(it))
         }
-        return true
     }
 }
 
 class FileDescriptorSetReflection(private val files: List<String>) : MediatorProtoReflection() {
-    override fun doResolve(): Boolean {
+    override suspend fun doResolve(name: String) {
         files.forEach {
             val set = FileDescriptorSet.parse(Files.readAllBytes(Path.of(it)))
             set.file.forEach {
                 register(DynamicFileSupport(it))
             }
         }
-        return true
     }
 }
 
@@ -106,66 +100,68 @@ class ServerProtoReflection(channel: io.grpc.Channel) : MediatorProtoReflection(
 
     private val collectedFile = mutableSetOf<String>()
 
-    override fun doResolve(): Boolean {
-        try {
-            runBlocking {
-                val input = Channel<ServerReflectionRequest>(1) {
-                    throw IllegalStateException()
-                }
-                val output = client.serverReflectionInfo(input.consumeAsFlow())
-                input.send(ServerReflectionRequest {
-                    listServices = ""
-                })
-                var count = 1
-                output.collect {
-                    count--
-                    when (val response = it.messageResponse) {
-                        is ServerReflectionResponse.MessageResponse.AllExtensionNumbersResponse -> TODO()
-                        is ServerReflectionResponse.MessageResponse.ErrorResponse -> TODO()
-                        is ServerReflectionResponse.MessageResponse.FileDescriptorResponse -> {
-                            for (descriptor in response.value.fileDescriptorProto) {
-                                val file = FileDescriptorProto.parse(descriptor)
-                                collectedFile += file.name
-                                if (findSupport(file.name) == null) {
-                                    register(DynamicFileSupport(file))
-                                }
-                                for (dependency in file.dependency) {
-                                    if (!containsFile(dependency) && findSupport(dependency) == null) {
-                                        collectedFile += dependency
-                                        input.send(ServerReflectionRequest {
-                                            println("Send: $dependency")
-                                            this.fileByFilename = dependency
-                                        })
-                                        count++
-                                    }
-                                }
-                            }
-                        }
-
-                        is ServerReflectionResponse.MessageResponse.ListServicesResponse -> {
-                            for (service in response.value.service) {
-                                input.send(ServerReflectionRequest {
-                                    this.fileContainingSymbol = service.name
-                                })
-                                count++
-                            }
-                        }
-
-                        null -> TODO()
-                    }
-                    if (count == 0) {
-                        input.close()
-                    }
-                }
+    override suspend fun doResolve(name: String) {
+        reflect(
+            ServerReflectionRequest {
+                this.fileContainingSymbol = name
             }
-            return true
-        } catch (e: Exception) {
-            e.printStackTrace()
-            return false
-        }
+        )
     }
 
     private fun containsFile(fileName: String): Boolean {
         return collectedFile.contains(fileName)
+    }
+
+    private suspend fun reflect(initRequest: ServerReflectionRequest) {
+        val input = Channel<ServerReflectionRequest>(1) {
+            throw IllegalStateException()
+        }
+        val output = client.serverReflectionInfo(input.consumeAsFlow())
+        input.send(initRequest)
+        var count = 1
+        output.collect {
+            count--
+            when (val response = it.messageResponse) {
+                is ServerReflectionResponse.MessageResponse.AllExtensionNumbersResponse -> TODO()
+                is ServerReflectionResponse.MessageResponse.ErrorResponse -> TODO()
+                is ServerReflectionResponse.MessageResponse.FileDescriptorResponse -> {
+                    for (descriptor in response.value.fileDescriptorProto) {
+                        val file = FileDescriptorProto.parse(descriptor)
+                        collectedFile += file.name
+                        if (findSupport(file.name) == null) {
+                            register(DynamicFileSupport(file))
+                        }
+                        for (dependency in file.dependency) {
+                            if (!containsFile(dependency) && findSupport(dependency) == null) {
+                                collectedFile += dependency
+                                input.send(
+                                    ServerReflectionRequest {
+                                        println("Send: $dependency")
+                                        this.fileByFilename = dependency
+                                    }
+                                )
+                                count++
+                            }
+                        }
+                    }
+                }
+
+                is ServerReflectionResponse.MessageResponse.ListServicesResponse -> {
+                    for (service in response.value.service) {
+                        input.send(
+                            ServerReflectionRequest {
+                                this.fileContainingSymbol = service.name
+                            }
+                        )
+                        count++
+                    }
+                }
+
+                null -> TODO()
+            }
+            if (count == 0) {
+                input.close()
+            }
+        }
     }
 }

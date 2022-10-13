@@ -81,7 +81,6 @@ class CallTimeline(val id: String = (counter++).toString()) : BaseObservableObje
         if (reflection == null) {
             reflection = MainViewModel.serverManager
                 ?.reflection(start.authority, start.ssl)
-                ?.takeIf { it.resolve() }
         }
         if (reflection == null) return false
         events.forEach {
