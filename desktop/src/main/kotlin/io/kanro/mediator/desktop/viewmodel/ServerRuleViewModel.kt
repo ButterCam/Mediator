@@ -11,6 +11,7 @@ class ServerRuleViewModel(
     regex: String = "",
     replaceEnabled: Boolean = true,
     replace: String = "",
+    replaceSsl: Boolean = false,
     schemaSource: ProtobufSchemaSource = ProtobufSchemaSource.SERVER_REFLECTION,
     reflectionMetadata: Map<String, String> = mapOf(),
     roots: List<String> = listOf(),
@@ -22,6 +23,7 @@ class ServerRuleViewModel(
         serverRule.authority.toString(),
         serverRule.replaceEnabled,
         serverRule.replace,
+        serverRule.replaceSsl,
         serverRule.schemaSource,
         serverRule.metadata,
         serverRule.roots,
@@ -38,7 +40,7 @@ class ServerRuleViewModel(
 
     val replace = mutableStateOf(replace)
 
-    val replaceSsl = mutableStateOf(false)
+    val replaceSsl = mutableStateOf(replaceSsl)
 
     val schemaSource = mutableStateOf(schemaSource)
 
