@@ -99,12 +99,14 @@ class MediatorGrpcProxySupport(private val config: MediatorConfiguration, privat
     ): Http2HeadersFrame {
         val timeline = CallTimeline()
         fs.attr(TIMELINE_KEY).set(timeline)
+        val rewriteHost = fs.parent().attr(REWRITE_AUTHORITY_KEY).get()
         val headers = frame.headers()
+        headers.authority(rewriteHost)
         fs.attr(REQUEST_READER_KEY).set(GrpcMessageReader(headers[GrpcCallDefinitions.GRPC_CODING_HEADER]?.toString()))
         timeline.start(
             fs.parent().attr(GrpcProxySupport.FRONTEND_SSL_ENABLE_KEY).get(),
             headers.authority().toString(),
-            fs.parent().attr(REWRITE_AUTHORITY_KEY).get(),
+            rewriteHost,
             headers.path().substring(1),
             MethodType.UNKNOWN,
             headers.toGrpcMetadata()
