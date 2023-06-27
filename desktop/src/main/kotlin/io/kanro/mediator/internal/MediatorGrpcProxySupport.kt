@@ -63,7 +63,7 @@ class MediatorGrpcProxySupport(private val config: MediatorConfiguration, privat
         val frontendSsl = frontend.attr(GrpcProxySupport.FRONTEND_SSL_ENABLE_KEY).get()
 
         if ((rewriteEnable && rewriteBackendSsl) || (!rewriteEnable && frontendSsl)) {
-            backendBootstrap.handler(GrpcSslProxyChannelInitializer())
+            backendBootstrap.handler(GrpcSslProxyChannelInitializer(host, port.toInt()))
             frontend.attr(GrpcProxySupport.BACKEND_SSL_ENABLE_KEY).set(true)
         }
 

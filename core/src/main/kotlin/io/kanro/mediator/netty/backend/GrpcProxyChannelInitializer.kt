@@ -32,7 +32,7 @@ class GrpcProxyChannelInitializer : ChannelInitializer<SocketChannel>() {
     }
 }
 
-class GrpcSslProxyChannelInitializer : ChannelInitializer<SocketChannel>() {
+class GrpcSslProxyChannelInitializer(val host: String, val port: Int) : ChannelInitializer<SocketChannel>() {
     override fun initChannel(ch: SocketChannel) {
         val context = SslContextBuilder.forClient()
             .applicationProtocolConfig(
@@ -46,7 +46,7 @@ class GrpcSslProxyChannelInitializer : ChannelInitializer<SocketChannel>() {
             .build()
 
         ch.pipeline()
-            .addLast(context.newHandler(ch.alloc()))
+            .addLast(context.newHandler(ch.alloc(), host, port))
             .addLast(LoggingHandler(LogLevel.INFO))
             .addLast(
                 Http2FrameCodecBuilder.forClient()
