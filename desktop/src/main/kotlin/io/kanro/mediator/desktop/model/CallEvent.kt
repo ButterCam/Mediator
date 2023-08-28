@@ -35,7 +35,9 @@ sealed interface CallEvent : ChangedInteraction {
         val resolvedAuthority: String,
         val method: String,
         val methodType: MethodType,
-        val header: Metadata
+        val header: Metadata,
+        val frontend: String,
+        val backend: String
     ) : CallEvent {
         private val timestamp = Timestamp.now()
 

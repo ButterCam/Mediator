@@ -109,7 +109,9 @@ class MediatorGrpcProxySupport(private val config: MediatorConfiguration, privat
             rewriteHost,
             headers.path().substring(1),
             MethodType.UNKNOWN,
-            headers.toGrpcMetadata()
+            headers.toGrpcMetadata(),
+            "R:${fs.remoteAddress()} - L:${fs.localAddress()}",
+            "L:${bs.localAddress()} - R:${bs.remoteAddress()}"
         )
         MainViewModel.calls += timeline
         val filter = MainViewModel.filter.value

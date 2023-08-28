@@ -9,27 +9,12 @@ import androidx.compose.foundation.gestures.draggable
 import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.hoverable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -49,15 +34,8 @@ import com.bybutter.sisyphus.string.toUpperSpaceCase
 import io.grpc.Metadata
 import io.kanro.compose.jetbrains.JBTheme
 import io.kanro.compose.jetbrains.SelectionScope
+import io.kanro.compose.jetbrains.control.*
 import io.kanro.compose.jetbrains.control.ContextMenuArea
-import io.kanro.compose.jetbrains.control.Icon
-import io.kanro.compose.jetbrains.control.JBTreeItem
-import io.kanro.compose.jetbrains.control.JBTreeList
-import io.kanro.compose.jetbrains.control.JPanelBorder
-import io.kanro.compose.jetbrains.control.ListItemHoverIndication
-import io.kanro.compose.jetbrains.control.ProgressBar
-import io.kanro.compose.jetbrains.control.Tab
-import io.kanro.compose.jetbrains.control.Text
 import io.kanro.mediator.desktop.model.CallEvent
 import io.kanro.mediator.desktop.model.CallTimeline
 import io.kanro.mediator.desktop.model.asState
@@ -154,20 +132,26 @@ fun StatisticsView(call: CallTimeline) {
             MetadataItem("Start time", start.timestamp().string(), selectedKey == 4) {
                 selectedKey = 4
             }
+            MetadataItem("Frontend Channel", start.frontend, selectedKey == 5) {
+                selectedKey = 5
+            }
+            MetadataItem("Backend Channel", start.backend, selectedKey == 6) {
+                selectedKey = 6
+            }
         }
         val close = call.close()
         if (close != null) {
-            MetadataItem("End time", close.timestamp().string(), selectedKey == 5) {
-                selectedKey = 5
+            MetadataItem("End time", close.timestamp().string(), selectedKey == 7) {
+                selectedKey = 7
             }
         }
         val transparent = call.first<CallEvent.Transparent>()
         if (transparent != null) {
-            MetadataItem("Authority", transparent.authority, selectedKey == 6) {
-                selectedKey = 6
+            MetadataItem("Authority", transparent.authority, selectedKey == 8) {
+                selectedKey = 8
             }
-            MetadataItem("Start time", transparent.timestamp().string(), selectedKey == 7) {
-                selectedKey = 7
+            MetadataItem("Start time", transparent.timestamp().string(), selectedKey == 9) {
+                selectedKey = 9
             }
         }
     }

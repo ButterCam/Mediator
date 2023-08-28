@@ -6,7 +6,7 @@ import io.kanro.mediator.desktop.viewmodel.MainViewModel
 import io.kanro.mediator.internal.MediatorProtoReflection
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import java.util.Deque
+import java.util.*
 import java.util.concurrent.ConcurrentLinkedDeque
 
 class CallTimeline(val id: String = (counter++).toString()) : BaseObservableObject() {
@@ -46,7 +46,9 @@ class CallTimeline(val id: String = (counter++).toString()) : BaseObservableObje
         resolvedAuthority: String,
         method: String,
         methodType: MethodType,
-        header: Metadata
+        header: Metadata,
+        frontend: String,
+        backend: String
     ): CallEvent.Start {
         return emit(
             CallEvent.Start(
@@ -55,7 +57,9 @@ class CallTimeline(val id: String = (counter++).toString()) : BaseObservableObje
                 resolvedAuthority,
                 method,
                 methodType,
-                header
+                header,
+                frontend,
+                backend
             )
         )
     }
