@@ -29,14 +29,14 @@ fun generateKeyPair(): KeyPair {
 }
 
 fun generateCertificate(keyPair: KeyPair): X509Certificate {
-    val name = X500Name("CN=Mediator Proxy Root, OU=Mediator, O=ButterCam Open Source").apply {
+    val name = X500Name("CN=f-Mediator Proxy Root, OU=f-Mediator, O=Limex").apply {
     }
     val publicKeyInfo = SubjectPublicKeyInfo.getInstance(keyPair.public.encoded)
     val holder = X509v3CertificateBuilder(
         name,
         BigInteger.probablePrime(160, java.util.Random()),
         Date(),
-        Date(System.currentTimeMillis() + 1000L * 60 * 60 * 24 * 365 * 10),
+        Date(System.currentTimeMillis() + 1000L * 60 * 60 * 24 * 2), // 2 weeks
         name,
         publicKeyInfo
     ).addExtension(
