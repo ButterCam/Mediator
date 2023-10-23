@@ -51,7 +51,8 @@ compose.desktop {
             jvmArgs(
                 "-Dapple.awt.application.appearance=system"
             )
-            targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
+//            targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
+            targetFormats(TargetFormat.Msi, TargetFormat.Deb)
             modules("java.management")
 
             packageName = "Mediator"
@@ -62,25 +63,25 @@ compose.desktop {
                 iconFile.set(project.file("./src/main/resources/icon.ico"))
             }
 
-            macOS {
-                bundleID = "com.bybutter.toolkit.mediator"
-                dockName = "Mediator"
-                iconFile.set(project.file("./src/main/resources/icon.icns"))
-
-                val appleId = notarization.appleID.orNull ?: System.getenv("NOTARIZATION_APPLEID")
-
-                if (appleId != null) {
-                    signing {
-                        sign.set(true)
-                        identity.set("Beijing Muke Technology Co., Ltd.")
-                    }
-
-                    notarization {
-                        appleID.set(appleId)
-                        password.set(System.getenv("NOTARIZATION_PASSWORD") ?: "@keychain:NOTARIZATION_PASSWORD")
-                    }
-                }
-            }
+//            macOS {
+//                bundleID = "com.bybutter.toolkit.mediator"
+//                dockName = "Mediator"
+//                iconFile.set(project.file("./src/main/resources/icon.icns"))
+//
+//                val appleId = notarization.appleID.orNull ?: System.getenv("NOTARIZATION_APPLEID")
+//
+//                if (appleId != null) {
+//                    signing {
+//                        sign.set(true)
+//                        identity.set("Beijing Muke Technology Co., Ltd.")
+//                    }
+//
+//                    notarization {
+//                        appleID.set(appleId)
+//                        password.set(System.getenv("NOTARIZATION_PASSWORD") ?: "@keychain:NOTARIZATION_PASSWORD")
+//                    }
+//                }
+//            }
         }
     }
 }
