@@ -26,7 +26,7 @@ jobs:
     needs: gradleValidation
     strategy:
       matrix:
-        platform: [ubuntu-latest, macos-latest, windows-latest]
+        platform: [ubuntu-latest, windows-latest]
     runs-on: ${{ matrix.platform }}
     outputs:
       name: ${{ steps.properties.outputs.name }}
@@ -81,26 +81,26 @@ jobs:
           echo "::set-output name=artifact::$ARTIFACT"
           echo "::set-output name=os::$RUNNER_OS"
 
-      - name: Import cert for MacOS
-        if: matrix.platform == 'macos-latest'
-        uses: apple-actions/import-codesign-certs@v1
-        with:
-          p12-file-base64: ${{ secrets.CERTIFICATES_P12 }}
-          p12-password: ${{ secrets.CERTIFICATES_P12_PASSWORD }}
+#      - name: Import cert for MacOS
+#        if: matrix.platform == 'macos-latest'
+#        uses: apple-actions/import-codesign-certs@v1
+#        with:
+#          p12-file-base64: ${{ secrets.CERTIFICATES_P12 }}
+#          p12-password: ${{ secrets.CERTIFICATES_P12_PASSWORD }}
 
       # Build artifact using buildPlugin Gradle task
       - name: Package
-        env:
-          NOTARIZATION_APPLEID: ${{ secrets.NOTARIZATION_APPLEID }}
-          NOTARIZATION_PASSWORD: ${{ secrets.NOTARIZATION_PASSWORD }}
+#        env:
+#          NOTARIZATION_APPLEID: ${{ secrets.NOTARIZATION_APPLEID }}
+#          NOTARIZATION_PASSWORD: ${{ secrets.NOTARIZATION_PASSWORD }}
         run: ./gradlew package
 
-      - name: Notarize dmg for MacOS
-        if: matrix.platform == 'macos-latest'
-        env:
-          NOTARIZATION_APPLEID: ${{ secrets.NOTARIZATION_APPLEID }}
-          NOTARIZATION_PASSWORD: ${{ secrets.NOTARIZATION_PASSWORD }}
-        run: ./gradlew notarizeDmg
+#      - name: Notarize dmg for MacOS
+#        if: matrix.platform == 'macos-latest'
+#        env:
+#          NOTARIZATION_APPLEID: ${{ secrets.NOTARIZATION_APPLEID }}
+#          NOTARIZATION_PASSWORD: ${{ secrets.NOTARIZATION_PASSWORD }}
+#        run: ./gradlew notarizeDmg
 
       # Upload plugin artifact to make it available in the next jobs
       - name: Upload artifact
