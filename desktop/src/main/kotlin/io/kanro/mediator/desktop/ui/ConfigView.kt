@@ -49,7 +49,6 @@ import androidx.compose.ui.window.rememberDialogState
 import com.bybutter.sisyphus.string.toTitleCase
 import io.kanro.compose.jetbrains.JBTheme
 import io.kanro.compose.jetbrains.JBThemeStyle
-import io.kanro.compose.jetbrains.SelectionScope
 import io.kanro.compose.jetbrains.control.Button
 import io.kanro.compose.jetbrains.control.CheckBox
 import io.kanro.compose.jetbrains.control.DropdownList
@@ -58,6 +57,7 @@ import io.kanro.compose.jetbrains.control.Icon
 import io.kanro.compose.jetbrains.control.JPanelBorder
 import io.kanro.compose.jetbrains.control.ListItemHoverIndication
 import io.kanro.compose.jetbrains.control.OutlineButton
+import io.kanro.compose.jetbrains.control.SelectionScope
 import io.kanro.compose.jetbrains.control.Text
 import io.kanro.compose.jetbrains.control.TextField
 import io.kanro.compose.jetbrains.control.jBorder
@@ -91,7 +91,7 @@ fun ConfigDialog(
     enabled: Boolean = true,
     focusable: Boolean = true,
     onPreviewKeyEvent: ((KeyEvent) -> Boolean) = { false },
-    onKeyEvent: ((KeyEvent) -> Boolean) = { false }
+    onKeyEvent: ((KeyEvent) -> Boolean) = { false },
 ) {
     Dialog(
         onCloseRequest,
@@ -105,10 +105,10 @@ fun ConfigDialog(
         enabled,
         focusable,
         onPreviewKeyEvent,
-        onKeyEvent
+        onKeyEvent,
     ) {
         CompositionLocalProvider(
-            LocalWindow provides this.window
+            LocalWindow provides this.window,
         ) {
             Column(Modifier.background(JBTheme.panelColors.bgDialog)) {
                 JPanelBorder(Modifier.height(1.dp).fillMaxWidth())
@@ -125,24 +125,24 @@ fun ConfigDialog(
                                 selectedItem == 0,
                                 {
                                     selectedItem = 0
-                                }
+                                },
                             ) {
                                 Text(
                                     "General",
                                     Modifier.padding(horizontal = 12.dp),
-                                    style = JBTheme.typography.defaultBold
+                                    style = JBTheme.typography.defaultBold,
                                 )
                             }
                             ConfigItem(
                                 selectedItem == 1,
                                 {
                                     selectedItem = 1
-                                }
+                                },
                             ) {
                                 Text(
                                     "Server Rule",
                                     Modifier.padding(horizontal = 12.dp),
-                                    style = JBTheme.typography.defaultBold
+                                    style = JBTheme.typography.defaultBold,
                                 )
                             }
 //                            ConfigItem(
@@ -173,7 +173,8 @@ fun ConfigDialog(
                 Row(Modifier.height(49.dp).jBorder(top = 1.dp, color = JBTheme.panelColors.border)) {
                     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.CenterEnd) {
                         Row(
-                            Modifier.padding(horizontal = 21.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            Modifier.padding(horizontal = 21.dp),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
                         ) {
                             OutlineButton({
                                 onCloseRequest()
@@ -185,7 +186,7 @@ fun ConfigDialog(
                                     onSave(vm)
                                     vm.changed.value = false
                                 },
-                                enabled = vm.changed.value
+                                enabled = vm.changed.value,
                             ) {
                                 Text("Apply")
                             }
@@ -208,7 +209,7 @@ fun ConfigItem(
     selected: Boolean,
     onClick: () -> Unit,
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
-    content: @Composable () -> Unit
+    content: @Composable () -> Unit,
 ) {
     Box(
         Modifier.fillMaxWidth().height(25.dp).selectable(
@@ -216,7 +217,7 @@ fun ConfigItem(
             interactionSource = interactionSource,
             indication = null,
             onClick = onClick,
-            role = null
+            role = null,
         ).run {
             if (selected) {
                 background(color = JBTheme.selectionColors.active)
@@ -224,7 +225,7 @@ fun ConfigItem(
                 this
             }
         },
-        contentAlignment = Alignment.CenterStart
+        contentAlignment = Alignment.CenterStart,
     ) {
         SelectionScope(selected, block = content)
     }
@@ -238,7 +239,8 @@ fun GeneralConfigView(vm: ConfigViewModel) {
         Row(Modifier.height(28.dp), verticalAlignment = Alignment.CenterVertically) {
             Text("Theme:", modifier = Modifier.width(70.dp))
             DropdownList(
-                listOf(null, *JBThemeStyle.values()), vm.theme.value,
+                listOf(null, *JBThemeStyle.values()),
+                vm.theme.value,
                 onValueChange = {
                     vm.theme.value = it
                     vm.changed.value = true
@@ -246,7 +248,7 @@ fun GeneralConfigView(vm: ConfigViewModel) {
                 },
                 valueRender = {
                     it?.toString()?.toTitleCase() ?: "Auto"
-                }
+                },
             )
         }
 
@@ -275,14 +277,15 @@ fun GeneralConfigView(vm: ConfigViewModel) {
                         vm.proxyPort.value = vm.proxyPort.value
                     }
                 },
-                isError = error, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                isError = error,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             )
         }
 
         Column(
             Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.Start,
-            verticalArrangement = Arrangement.spacedBy(6.dp)
+            verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
             Text("Local Address:", modifier = Modifier.width(100.dp))
             val localAddress = remember {
@@ -301,7 +304,7 @@ fun GeneralConfigView(vm: ConfigViewModel) {
                 modifier = Modifier.fillMaxSize(),
                 readOnly = true,
                 singleLine = false,
-                maxLines = Int.MAX_VALUE
+                maxLines = Int.MAX_VALUE,
             )
         }
     }
@@ -340,19 +343,21 @@ fun ServerRuleView(vm: ConfigViewModel) {
                 vm.serverRules.remove(rule)
                 vm.serverRules.add(index + 1, rule)
                 vm.changed.value = true
-            }
+            },
         )
         Row(Modifier.fillMaxSize(), horizontalArrangement = Arrangement.spacedBy(20.dp)) {
             LazyColumn(
                 Modifier.width(150.dp).fillMaxHeight().background(JBTheme.panelColors.bgContent)
-                    .jBorder(1.dp, JBTheme.panelColors.border)
+                    .jBorder(1.dp, JBTheme.panelColors.border),
             ) {
                 items(vm.serverRules) { x ->
                     RuleRow(
-                        x.name.value, x.enabled.value, selectedRule == x,
+                        x.name.value,
+                        x.enabled.value,
+                        selectedRule == x,
                         {
                             selectedRule = x
-                        }
+                        },
                     )
                 }
             }
@@ -362,14 +367,14 @@ fun ServerRuleView(vm: ConfigViewModel) {
                     Row(
                         Modifier.height(28.dp),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         CheckBox(
                             rule.enabled.value,
                             {
                                 rule.enabled.value = it
                                 vm.changed.value = true
-                            }
+                            },
                         )
                         Text("Enable server rule")
                     }
@@ -381,7 +386,8 @@ fun ServerRuleView(vm: ConfigViewModel) {
                                 rule.name.value = it.trim()
                                 vm.changed.value = true
                             },
-                            Modifier.width(200.dp), singleLine = true
+                            Modifier.width(200.dp),
+                            singleLine = true,
                         )
                     }
 
@@ -393,7 +399,9 @@ fun ServerRuleView(vm: ConfigViewModel) {
                                 rule.regex.value = it.trim()
                                 vm.changed.value = true
                             },
-                            Modifier.width(200.dp), isError = !rule.regex.value.isValidRegex(), singleLine = true
+                            Modifier.width(200.dp),
+                            isError = !rule.regex.value.isValidRegex(),
+                            singleLine = true,
                         )
                     }
 
@@ -401,7 +409,8 @@ fun ServerRuleView(vm: ConfigViewModel) {
                         Text("Rewrite:", Modifier.width(80.dp))
 
                         DropdownList(
-                            listOf(false, true), rule.replaceSsl.value,
+                            listOf(false, true),
+                            rule.replaceSsl.value,
                             onValueChange = {
                                 rule.replaceSsl.value = it
                                 vm.changed.value = true
@@ -409,7 +418,7 @@ fun ServerRuleView(vm: ConfigViewModel) {
                             valueRender = {
                                 if (it) "HTTPS" else "HTTP"
                             },
-                            enabled = rule.replaceEnabled.value
+                            enabled = rule.replaceEnabled.value,
                         )
                         Spacer(Modifier.width(8.dp))
                         TextField(
@@ -418,21 +427,24 @@ fun ServerRuleView(vm: ConfigViewModel) {
                                 rule.replace.value = it.trim()
                                 vm.changed.value = true
                             },
-                            Modifier.width(200.dp), singleLine = true, enabled = rule.replaceEnabled.value
+                            Modifier.width(200.dp),
+                            singleLine = true,
+                            enabled = rule.replaceEnabled.value,
                         )
                         Spacer(Modifier.width(8.dp))
                         CheckBox(
                             rule.replaceEnabled.value,
                             onCheckedChange = {
                                 rule.replaceEnabled.value = it
-                            }
+                            },
                         )
                     }
 
                     Row(Modifier.height(28.dp), verticalAlignment = Alignment.CenterVertically) {
                         Text("Schema:", Modifier.width(80.dp))
                         DropdownList(
-                            ProtobufSchemaSource.values().toList(), rule.schemaSource.value,
+                            ProtobufSchemaSource.values().toList(),
+                            rule.schemaSource.value,
                             onValueChange = {
                                 rule.schemaSource.value = it
                                 vm.changed.value = true
@@ -444,7 +456,7 @@ fun ServerRuleView(vm: ConfigViewModel) {
                                     ProtobufSchemaSource.FILE_DESCRIPTOR_SET -> "File descriptor set"
                                     else -> it.name
                                 }
-                            }
+                            },
                         )
                     }
 
@@ -453,22 +465,25 @@ fun ServerRuleView(vm: ConfigViewModel) {
                     when (rule.schemaSource.value) {
                         ProtobufSchemaSource.SERVER_REFLECTION -> {
                             Column(
-                                verticalArrangement = Arrangement.spacedBy(6.dp)
+                                verticalArrangement = Arrangement.spacedBy(6.dp),
                             ) {
                                 Text("Reflection api metadata:")
                                 MetadataView(
-                                    vm, rule.reflectionMetadata, Modifier.height(0.dp).weight(1.0f).fillMaxWidth()
+                                    vm,
+                                    rule.reflectionMetadata,
+                                    Modifier.height(0.dp).weight(1.0f).fillMaxWidth(),
                                 )
                             }
                         }
 
                         ProtobufSchemaSource.PROTO_ROOT -> {
                             Column(
-                                verticalArrangement = Arrangement.spacedBy(6.dp)
+                                verticalArrangement = Arrangement.spacedBy(6.dp),
                             ) {
                                 Text("Proto file roots:")
                                 PathsView(
-                                    vm, rule.roots,
+                                    vm,
+                                    rule.roots,
                                     {
                                         val fileChooser = JFileChooser().apply {
                                             fileSelectionMode = JFileChooser.DIRECTORIES_ONLY
@@ -479,18 +494,19 @@ fun ServerRuleView(vm: ConfigViewModel) {
                                         fileChooser.showOpenDialog(window)
                                         fileChooser.selectedFile?.toPath()?.toString()
                                     },
-                                    Modifier.height(0.dp).weight(1.0f).fillMaxWidth()
+                                    Modifier.height(0.dp).weight(1.0f).fillMaxWidth(),
                                 )
                             }
                         }
 
                         ProtobufSchemaSource.FILE_DESCRIPTOR_SET -> {
                             Column(
-                                verticalArrangement = Arrangement.spacedBy(6.dp)
+                                verticalArrangement = Arrangement.spacedBy(6.dp),
                             ) {
                                 Text("File descriptor set:")
                                 PathsView(
-                                    vm, rule.descriptors,
+                                    vm,
+                                    rule.descriptors,
                                     {
                                         val dialog = FileDialog(window, "Select", FileDialog.LOAD)
                                         dialog.isVisible = true
@@ -498,7 +514,7 @@ fun ServerRuleView(vm: ConfigViewModel) {
                                             Path.of(dialog.directory, dialog.file).toString()
                                         }
                                     },
-                                    Modifier.height(0.dp).weight(1.0f).fillMaxWidth()
+                                    Modifier.height(0.dp).weight(1.0f).fillMaxWidth(),
                                 )
                             }
                         }
@@ -546,19 +562,21 @@ fun RequestRuleView(vm: ConfigViewModel) {
                 vm.requestRules.remove(rule)
                 vm.requestRules.add(index + 1, rule)
                 vm.changed.value = true
-            }
+            },
         )
         Row(Modifier.fillMaxSize(), horizontalArrangement = Arrangement.spacedBy(20.dp)) {
             LazyColumn(
                 Modifier.width(150.dp).fillMaxHeight().background(JBTheme.panelColors.bgContent)
-                    .jBorder(1.dp, JBTheme.panelColors.border)
+                    .jBorder(1.dp, JBTheme.panelColors.border),
             ) {
                 items(vm.requestRules) { x ->
                     RuleRow(
-                        x.name.value, x.enabled.value, selectedRule == x,
+                        x.name.value,
+                        x.enabled.value,
+                        selectedRule == x,
                         {
                             selectedRule = x
-                        }
+                        },
                     )
                 }
             }
@@ -568,14 +586,14 @@ fun RequestRuleView(vm: ConfigViewModel) {
                     Row(
                         Modifier.height(28.dp),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         CheckBox(
                             rule.enabled.value,
                             {
                                 rule.enabled.value = it
                                 vm.changed.value = true
-                            }
+                            },
                         )
                         Text("Enable request rule")
                     }
@@ -587,7 +605,8 @@ fun RequestRuleView(vm: ConfigViewModel) {
                                 rule.name.value = it.trim()
                                 vm.changed.value = true
                             },
-                            Modifier.width(200.dp), singleLine = true
+                            Modifier.width(200.dp),
+                            singleLine = true,
                         )
                     }
 
@@ -599,35 +618,39 @@ fun RequestRuleView(vm: ConfigViewModel) {
                                 rule.method.value = it.trim()
                                 vm.changed.value = true
                             },
-                            Modifier.width(200.dp), isError = !rule.method.value.isValidRegex(), singleLine = true
+                            Modifier.width(200.dp),
+                            isError = !rule.method.value.isValidRegex(),
+                            singleLine = true,
                         )
                     }
 
                     Row(Modifier.height(28.dp), verticalAlignment = Alignment.CenterVertically) {
                         Text("Type:", Modifier.width(80.dp))
                         DropdownList(
-                            RequestRule.Type.values().toList(), rule.type.value,
+                            RequestRule.Type.values().toList(),
+                            rule.type.value,
                             onValueChange = {
                                 rule.type.value = it
                                 vm.changed.value = true
                             },
                             valueRender = {
                                 it.toString().toTitleCase()
-                            }
+                            },
                         )
                     }
 
                     Row(Modifier.height(28.dp), verticalAlignment = Alignment.CenterVertically) {
                         Text("Operation:", Modifier.width(80.dp))
                         DropdownList(
-                            RequestRule.Operation.values().toList(), rule.op.value,
+                            RequestRule.Operation.values().toList(),
+                            rule.op.value,
                             onValueChange = {
                                 rule.op.value = it
                                 vm.changed.value = true
                             },
                             valueRender = {
                                 it.toString().toTitleCase()
-                            }
+                            },
                         )
                     }
 
@@ -647,7 +670,8 @@ fun RequestRuleView(vm: ConfigViewModel) {
                                 rule.path.value = it.trim()
                                 vm.changed.value = true
                             },
-                            Modifier.width(200.dp), singleLine = true
+                            Modifier.width(200.dp),
+                            singleLine = true,
                         )
                     }
 
@@ -655,7 +679,8 @@ fun RequestRuleView(vm: ConfigViewModel) {
                         RequestRule.Operation.REMOVE -> {}
                         RequestRule.Operation.TEST, RequestRule.Operation.ADD, RequestRule.Operation.REPLACE -> {
                             Column(
-                                Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(6.dp)
+                                Modifier.fillMaxSize(),
+                                verticalArrangement = Arrangement.spacedBy(6.dp),
                             ) {
                                 Text("Value:", Modifier.width(80.dp))
                                 TextField(
@@ -664,7 +689,9 @@ fun RequestRuleView(vm: ConfigViewModel) {
                                         rule.value.value = it.trim()
                                         vm.changed.value = true
                                     },
-                                    Modifier.fillMaxSize(), singleLine = false, maxLines = Int.MAX_VALUE
+                                    Modifier.fillMaxSize(),
+                                    singleLine = false,
+                                    maxLines = Int.MAX_VALUE,
                                 )
                             }
                         }
@@ -678,7 +705,8 @@ fun RequestRuleView(vm: ConfigViewModel) {
                                         rule.value.value = it.trim()
                                         vm.changed.value = true
                                     },
-                                    Modifier.width(200.dp), singleLine = true
+                                    Modifier.width(200.dp),
+                                    singleLine = true,
                                 )
                             }
                         }
@@ -708,7 +736,7 @@ fun RuleRow(
                 interactionSource = interactionSource,
                 indication = ListItemHoverIndication,
                 onClick = onSelect,
-                role = null
+                role = null,
             ).run {
                 if (selected) {
                     background(color = JBTheme.selectionColors.active)
@@ -717,7 +745,7 @@ fun RuleRow(
                 }
             }.hoverable(interactionSource).padding(horizontal = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(6.dp)
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
         ) {
             Box(Modifier.size(16.dp)) {
                 if (enabled) {
@@ -747,16 +775,21 @@ fun MetadataView(
             }
             items(metadata) { x ->
                 MetadataRow(
-                    keyWidth, configVm, x, selectedEntry == x,
+                    keyWidth,
+                    configVm,
+                    x,
+                    selectedEntry == x,
                     {
                         selectedEntry = x
-                    }
+                    },
                 )
             }
         }
         JPanelBorder(Modifier.width(1.dp).fillMaxHeight())
         ListToolBar(
-            list = metadata, selectedItem = selectedEntry, orientation = Orientation.Vertical,
+            list = metadata,
+            selectedItem = selectedEntry,
+            orientation = Orientation.Vertical,
             onCreate = {
                 metadata += MetadataEntry("(new)")
                 configVm.changed.value = true
@@ -765,7 +798,7 @@ fun MetadataView(
                 metadata.remove(selectedEntry)
                 selectedEntry = null
                 configVm.changed.value = true
-            }
+            },
         )
     }
 }
@@ -777,7 +810,7 @@ fun MetadataRowHeader(
 ) {
     Row(
         modifier = Modifier.height(28.dp).fillMaxWidth().background(JBTheme.panelColors.bgContent),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         val fromState = rememberDraggableState { delta ->
             resizing(delta)
@@ -789,8 +822,9 @@ fun MetadataRowHeader(
         JPanelBorder(
             Modifier.width(1.dp).fillMaxHeight()
                 .pointerHoverIcon(PointerIcon(Cursor.getPredefinedCursor(Cursor.W_RESIZE_CURSOR))).draggable(
-                    orientation = Orientation.Horizontal, state = fromState
-                )
+                    orientation = Orientation.Horizontal,
+                    state = fromState,
+                ),
         )
         Box(Modifier.width(0.dp).weight(1.0f)) {
             Text("Value", Modifier.padding(start = 7.dp))
@@ -814,7 +848,7 @@ fun MetadataRow(
                 interactionSource = interactionSource,
                 indication = ListItemHoverIndication,
                 onClick = onSelect,
-                role = null
+                role = null,
             ).run {
                 if (selected) {
                     background(color = JBTheme.selectionColors.active)
@@ -822,7 +856,7 @@ fun MetadataRow(
                     this
                 }
             }.hoverable(interactionSource),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             EmbeddedTextField(
                 entry.key.value,
@@ -835,7 +869,7 @@ fun MetadataRow(
                         onSelect()
                     }
                 },
-                singleLine = true
+                singleLine = true,
             )
             Spacer(Modifier.width(1.dp))
             EmbeddedTextField(
@@ -849,7 +883,7 @@ fun MetadataRow(
                         onSelect()
                     }
                 },
-                singleLine = true
+                singleLine = true,
             )
         }
     }
@@ -869,20 +903,22 @@ fun PathsView(
             stickyHeader {
                 Row(
                     modifier = Modifier.height(28.dp).fillMaxWidth().background(JBTheme.panelColors.bgContent),
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text("Path", Modifier.padding(start = 7.dp))
                 }
             }
             itemsIndexed(roots) { index, x ->
                 PathRow(
-                    configVm, x, selected == index,
+                    configVm,
+                    x,
+                    selected == index,
                     {
                         selected = index
                     },
                     {
                         roots[index] = it
-                    }
+                    },
                 )
             }
         }
@@ -901,7 +937,7 @@ fun PathsView(
                 roots.removeAt(selected)
                 selected = -1
                 configVm.changed.value = true
-            }
+            },
         )
     }
 }
@@ -922,7 +958,7 @@ fun PathRow(
                 interactionSource = interactionSource,
                 indication = ListItemHoverIndication,
                 onClick = onSelect,
-                role = null
+                role = null,
             ).run {
                 if (selected) {
                     background(color = JBTheme.selectionColors.active)
@@ -930,7 +966,7 @@ fun PathRow(
                     this
                 }
             }.hoverable(interactionSource),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             EmbeddedTextField(
                 path,
@@ -943,7 +979,7 @@ fun PathRow(
                         onSelect()
                     }
                 },
-                singleLine = true
+                singleLine = true,
             )
         }
     }

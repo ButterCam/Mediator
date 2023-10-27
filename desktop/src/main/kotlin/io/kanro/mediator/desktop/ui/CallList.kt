@@ -42,10 +42,10 @@ import com.bybutter.sisyphus.protobuf.primitives.minus
 import com.bybutter.sisyphus.protobuf.primitives.toTime
 import io.grpc.Status
 import io.kanro.compose.jetbrains.JBTheme
-import io.kanro.compose.jetbrains.SelectionScope
 import io.kanro.compose.jetbrains.control.Icon
 import io.kanro.compose.jetbrains.control.JPanelBorder
 import io.kanro.compose.jetbrains.control.ListItemHoverIndication
+import io.kanro.compose.jetbrains.control.SelectionScope
 import io.kanro.compose.jetbrains.control.Text
 import io.kanro.compose.jetbrains.control.jBorder
 import io.kanro.mediator.desktop.model.CallEvent
@@ -111,7 +111,7 @@ fun CallList(modifier: Modifier = Modifier) {
 
             VerticalScrollbar(
                 rememberScrollbarAdapter(listState),
-                Modifier.align(Alignment.CenterEnd)
+                Modifier.align(Alignment.CenterEnd),
             )
         }
     }
@@ -134,7 +134,7 @@ fun CallRowHeader(
             .fillMaxWidth()
             .background(JBTheme.panelColors.bgContent)
             .jBorder(bottom = 1.dp, color = JBTheme.panelColors.border),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         val idState = rememberDraggableState { delta ->
             resizing(0, delta)
@@ -150,7 +150,7 @@ fun CallRowHeader(
             return pointerHoverIcon(PointerIcon(Cursor.getPredefinedCursor(Cursor.W_RESIZE_CURSOR)))
                 .draggable(
                     orientation = Orientation.Horizontal,
-                    state = state
+                    state = state,
                 )
         }
 
@@ -183,7 +183,7 @@ fun CallRow(
     selected: Boolean,
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
     role: Role? = null,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     SelectionScope(selected) {
         Row(
@@ -202,7 +202,7 @@ fun CallRow(
                     interactionSource = interactionSource,
                     indication = ListItemHoverIndication,
                     onClick = onClick,
-                    role = role
+                    role = role,
                 )
                 .run {
                     if (selected) {
@@ -213,7 +213,7 @@ fun CallRow(
                 }
                 .hoverable(interactionSource)
                 .jBorder(bottom = 1.dp, color = JBTheme.panelColors.border),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             val call by record.asState()
             val start = call.start()
@@ -296,25 +296,30 @@ fun CallIcon(call: CallTimeline, modifier: Modifier = Modifier) {
                 Status.Code.OK -> Icon("icons/toolbarPassed.svg")
 
                 Status.Code.ABORTED,
-                Status.Code.CANCELLED -> Icon("icons/toolbarTerminated.svg")
+                Status.Code.CANCELLED,
+                -> Icon("icons/toolbarTerminated.svg")
 
                 Status.Code.DEADLINE_EXCEEDED,
                 Status.Code.PERMISSION_DENIED,
-                Status.Code.UNAUTHENTICATED -> Icon("icons/toolbarSkipped.svg")
+                Status.Code.UNAUTHENTICATED,
+                -> Icon("icons/toolbarSkipped.svg")
 
                 Status.Code.ALREADY_EXISTS,
                 Status.Code.RESOURCE_EXHAUSTED,
                 Status.Code.FAILED_PRECONDITION,
                 Status.Code.OUT_OF_RANGE,
                 Status.Code.UNAVAILABLE,
-                Status.Code.INVALID_ARGUMENT -> Icon("icons/toolbarFailed.svg")
+                Status.Code.INVALID_ARGUMENT,
+                -> Icon("icons/toolbarFailed.svg")
 
                 Status.Code.DATA_LOSS,
-                Status.Code.NOT_FOUND -> Icon("icons/testUnknown.svg")
+                Status.Code.NOT_FOUND,
+                -> Icon("icons/testUnknown.svg")
 
                 Status.Code.UNIMPLEMENTED,
                 Status.Code.UNKNOWN,
-                Status.Code.INTERNAL -> Icon("icons/toolbarError.svg")
+                Status.Code.INTERNAL,
+                -> Icon("icons/toolbarError.svg")
 
                 else -> Icon("icons/run.svg")
             }

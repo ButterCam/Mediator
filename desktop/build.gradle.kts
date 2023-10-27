@@ -1,4 +1,3 @@
-import org.jetbrains.compose.compose
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
@@ -17,19 +16,20 @@ repositories {
 
 dependencies {
     implementation(project(":core"))
-    implementation("com.bybutter.compose:compose-jetbrains-theme:1.1.0")
+    implementation("com.bybutter.compose:compose-jetbrains-theme:2.2.0")
     implementation("org.jetbrains.kotlin:kotlin-reflect:1.6.10")
-    testImplementation(kotlin("test-junit5"))
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.7.2")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.7.2")
     implementation("net.harawata:appdirs:1.2.1")
     implementation("com.github.java-json-tools:json-patch:1.13")
     implementation("com.github.Dansoftowner:jSystemThemeDetector:3.8")
-    implementation("com.bybutter.sisyphus.tools:sisyphus-protoc-runner:1.3.35")
+    implementation("com.bybutter.sisyphus.tools:sisyphus-protoc-runner:2.1.0")
     implementation("ch.qos.logback:logback-classic:1.4.1")
 
     implementation(compose.desktop.currentOs)
     implementation(compose.uiTooling)
+
+    testImplementation(kotlin("test-junit5"))
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.7.2")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.7.2")
 }
 
 tasks.test {
@@ -37,10 +37,10 @@ tasks.test {
 }
 
 tasks.withType<KotlinCompile>() {
-    kotlinOptions.jvmTarget = "16"
+    kotlinOptions.jvmTarget = "17"
     kotlinOptions.freeCompilerArgs += listOf(
         "-P",
-        "plugin:androidx.compose.compiler.plugins.kotlin:suppressKotlinVersionCompatibilityCheck=true"
+        "plugin:androidx.compose.compiler.plugins.kotlin:suppressKotlinVersionCompatibilityCheck=true",
     )
 }
 
@@ -49,7 +49,7 @@ compose.desktop {
         mainClass = "io.kanro.mediator.desktop.MainKt"
         nativeDistributions {
             jvmArgs(
-                "-Dapple.awt.application.appearance=system"
+                "-Dapple.awt.application.appearance=system",
             )
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             modules("java.management")

@@ -11,11 +11,11 @@ protobuf {
 }
 
 dependencies {
-    api("io.grpc:grpc-core:1.42.1")
-    api("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.6.0")
-    api("com.bybutter.sisyphus:sisyphus-grpc-coroutine:1.3.35")
-    api("com.bybutter.sisyphus:sisyphus-jackson-protobuf:1.3.35")
-    api("io.grpc:grpc-netty:1.42.1")
+    api("io.grpc:grpc-core:1.59.0")
+    api("io.grpc:grpc-netty:1.59.0")
+    api("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.7.3")
+    api("com.bybutter.sisyphus:sisyphus-grpc-coroutine:2.1.0")
+    api("com.bybutter.sisyphus:sisyphus-jackson-protobuf:2.1.0")
     api("io.netty:netty-handler-proxy:4.1.72.Final")
     api("org.bouncycastle:bcpkix-jdk15on:1.70")
 
@@ -29,7 +29,7 @@ tasks.test {
 }
 
 tasks.withType<KotlinCompile>() {
-    kotlinOptions.jvmTarget = "16"
+    kotlinOptions.jvmTarget = "17"
 }
 
 ktlint {

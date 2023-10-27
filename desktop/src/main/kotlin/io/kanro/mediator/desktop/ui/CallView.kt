@@ -20,6 +20,7 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import com.bybutter.sisyphus.coroutine.io
@@ -33,7 +34,6 @@ import com.bybutter.sisyphus.rpc.Status
 import com.bybutter.sisyphus.string.toUpperSpaceCase
 import io.grpc.Metadata
 import io.kanro.compose.jetbrains.JBTheme
-import io.kanro.compose.jetbrains.SelectionScope
 import io.kanro.compose.jetbrains.control.*
 import io.kanro.compose.jetbrains.control.ContextMenuArea
 import io.kanro.mediator.desktop.model.CallEvent
@@ -54,26 +54,30 @@ fun CallView(call: CallTimeline?) {
     Box(Modifier.fillMaxWidth()) {
         JPanelBorder(Modifier.fillMaxWidth().height(1.dp).align(Alignment.BottomStart))
 
+        val density = LocalDensity.current
+
         Box(
             Modifier.matchParentSize().pointerHoverIcon(PointerIcon(Cursor.getPredefinedCursor(Cursor.N_RESIZE_CURSOR)))
                 .draggable(
                     orientation = Orientation.Vertical,
                     state = rememberDraggableState { delta ->
-                        height -= delta.dp
-                    }
-                )
+                        with(density) {
+                            height -= delta.toDp()
+                        }
+                    },
+                ),
         ) {}
         Row(Modifier.fillMaxWidth().align(Alignment.CenterStart)) {
             Tab(
                 selectedTab == 0,
                 {
                     selectedTab = 0
-                }
+                },
             ) {
                 Row(
                     modifier = Modifier.padding(7.dp, 4.dp),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
                     Icon("icons/ppLib.svg")
                     Text("Statistics", modifier = Modifier.offset(y = (-1).dp))
@@ -83,12 +87,12 @@ fun CallView(call: CallTimeline?) {
                 selectedTab == 1,
                 {
                     selectedTab = 1
-                }
+                },
             ) {
                 Row(
                     modifier = Modifier.padding(7.dp, 4.dp),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
                     Icon("icons/timeline.svg")
                     Text("Timeline", modifier = Modifier.offset(y = (-1).dp))
@@ -112,7 +116,6 @@ fun CallView(call: CallTimeline?) {
 @Composable
 fun StatisticsView(call: CallTimeline) {
     Column(Modifier.background(JBTheme.panelColors.bgContent).fillMaxSize()) {
-
         var selectedKey by remember(call) { mutableStateOf(-1) }
 
         MetadataItem("ID", call.id, selectedKey == 0) {
@@ -184,8 +187,8 @@ fun TimelineView(call: CallTimeline) {
                     orientation = Orientation.Horizontal,
                     state = rememberDraggableState { delta ->
                         width += delta.dp
-                    }
-                )
+                    },
+                ),
         )
 
         Box(Modifier.fillMaxSize()) {
@@ -199,6 +202,7 @@ fun TimelineView(call: CallTimeline) {
                     is CallEvent.Input -> EventView(timeline, event)
                     is CallEvent.Output -> EventView(timeline, event)
                     is CallEvent.Start -> EventView(event)
+                    else -> {}
                 }
             }
         }
@@ -213,7 +217,7 @@ fun TimelineItemRow(
     selected: Boolean,
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
     role: Role? = null,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     ContextMenuArea({
         val result = mutableListOf<ContextMenuItem>()
@@ -228,9 +232,9 @@ fun TimelineItemRow(
                 result += ContextMenuItem("Copy Headers") {
                     Toolkit.getDefaultToolkit().systemClipboard.setContents(
                         StringSelection(
-                            event.header.toMap().toJson()
+                            event.header.toMap().toJson(),
                         ),
-                        null
+                        null,
                     )
                 }
             }
@@ -239,9 +243,9 @@ fun TimelineItemRow(
                 result += ContextMenuItem("Copy Headers") {
                     Toolkit.getDefaultToolkit().systemClipboard.setContents(
                         StringSelection(
-                            event.header.toMap().toJson()
+                            event.header.toMap().toJson(),
                         ),
-                        null
+                        null,
                     )
                 }
             }
@@ -250,9 +254,9 @@ fun TimelineItemRow(
                 result += ContextMenuItem("Copy Trails") {
                     Toolkit.getDefaultToolkit().systemClipboard.setContents(
                         StringSelection(
-                            event.trails.toMap().toJson()
+                            event.trails.toMap().toJson(),
                         ),
-                        null
+                        null,
                     )
                 }
             }
@@ -263,7 +267,8 @@ fun TimelineItemRow(
                 }
                 result += ContextMenuItem("Copy Message") {
                     Toolkit.getDefaultToolkit().systemClipboard.setContents(
-                        StringSelection(json), null
+                        StringSelection(json),
+                        null,
                     )
                 }
             }
@@ -274,10 +279,13 @@ fun TimelineItemRow(
                 }
                 result += ContextMenuItem("Copy Message") {
                     Toolkit.getDefaultToolkit().systemClipboard.setContents(
-                        StringSelection(json), null
+                        StringSelection(json),
+                        null,
                     )
                 }
             }
+
+            else -> {}
         }
         result
     }) {
@@ -288,7 +296,7 @@ fun TimelineItemRow(
                     interactionSource = interactionSource,
                     indication = ListItemHoverIndication,
                     onClick = onClick,
-                    role = role
+                    role = role,
                 ).run {
                     if (selected) {
                         background(color = JBTheme.selectionColors.active)
@@ -296,7 +304,7 @@ fun TimelineItemRow(
                         this
                     }
                 }.hoverable(interactionSource),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 val icon = when (event) {
                     is CallEvent.Transparent -> "icons/testUnknown.svg"
@@ -367,6 +375,7 @@ fun EventView(call: CallTimeline, event: CallEvent) {
         when (event) {
             is CallEvent.Input -> MessageView(call.reflection(), event.message())
             is CallEvent.Output -> MessageView(call.reflection(), event.message())
+            else -> {}
         }
     } else {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -403,18 +412,23 @@ fun MetadataView(metadata: Metadata, modifier: Modifier = Modifier) {
                 if (key.endsWith("-bin")) {
                     val value = metadata[Metadata.Key.of(it, Metadata.BINARY_BYTE_MARSHALLER)] ?: byteArrayOf()
                     MessageFieldView(
-                        Modifier, selectedKey, ProtoReflection.current(),
+                        Modifier,
+                        selectedKey,
+                        ProtoReflection.current(),
                         FieldDescriptorProto {
                             this.type = FieldDescriptorProto.Type.MESSAGE
                             this.name = "status"
                             this.typeName = Status.name
                         },
-                        it, Status.parse(value)
+                        it,
+                        Status.parse(value),
                     )
                 } else {
                     val value = metadata[Metadata.Key.of(it, Metadata.ASCII_STRING_MARSHALLER)] ?: ""
                     MetadataItem(
-                        it, value, selectedKey.value == it
+                        it,
+                        value,
+                        selectedKey.value == it,
                     ) {
                         selectedKey.value = it
                     }
@@ -430,7 +444,7 @@ fun MetadataItem(
     key: String,
     value: String,
     selected: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     ContextMenuArea({
         val result = mutableListOf<ContextMenuItem>()

@@ -2,15 +2,20 @@ package io.kanro.mediator.internal
 
 import com.bybutter.sisyphus.protobuf.ProtobufBooster
 import io.grpc.ConnectivityState
+import io.grpc.Grpc
 import io.grpc.HttpConnectProxiedSocketAddress
 import io.grpc.ManagedChannel
 import io.grpc.ManagedChannelBuilder
+import io.grpc.TlsChannelCredentials
 import io.kanro.mediator.desktop.model.MediatorConfiguration
 import io.kanro.mediator.desktop.model.ProtobufSchemaSource
 import io.kanro.mediator.desktop.model.ServerRule
 import io.kanro.mediator.desktop.viewmodel.MainViewModel
 import io.kanro.mediator.netty.frontend.GrpcProxyServer
 import java.net.InetSocketAddress
+import java.security.cert.CertificateException
+import java.security.cert.X509Certificate
+import javax.net.ssl.X509TrustManager
 
 class ServerManager(vm: MainViewModel, private val config: MediatorConfiguration) {
     /**
@@ -58,42 +63,59 @@ class ServerManager(vm: MainViewModel, private val config: MediatorConfiguration
 
     fun replayChannel(authority: String, ssl: Boolean): io.grpc.Channel {
         return replayChannels.getOrPut("http${if (ssl) "s" else ""}://$authority") {
-            ManagedChannelBuilder.forTarget(authority).proxyDetector {
-                HttpConnectProxiedSocketAddress.newBuilder().setTargetAddress(it as InetSocketAddress).setProxyAddress(
-                    InetSocketAddress(
-                        "127.0.0.1", config.proxyPort
-                    )
-                ).build()
+            if (ssl) {
+                val creds = TlsChannelCredentials.newBuilder().trustManager(object : X509TrustManager {
+                    override fun getAcceptedIssuers(): Array<X509Certificate> = arrayOf()
+
+                    @Throws(CertificateException::class)
+                    override fun checkServerTrusted(chain: Array<X509Certificate>, authType: String) = Unit
+
+                    @Throws(CertificateException::class)
+                    override fun checkClientTrusted(chain: Array<X509Certificate>, authType: String) = Unit
+                }).build()
+                Grpc.newChannelBuilder(authority, creds).proxyDetector {
+                    HttpConnectProxiedSocketAddress.newBuilder().setTargetAddress(it as InetSocketAddress)
+                        .setProxyAddress(
+                            InetSocketAddress(
+                                "127.0.0.1",
+                                config.proxyPort,
+                            ),
+                        ).build()
+                }.build()
+            } else {
+                ManagedChannelBuilder.forTarget(authority).proxyDetector {
+                    HttpConnectProxiedSocketAddress.newBuilder().setTargetAddress(it as InetSocketAddress)
+                        .setProxyAddress(
+                            InetSocketAddress(
+                                "127.0.0.1",
+                                config.proxyPort,
+                            ),
+                        ).build()
+                }.usePlaintext().build()
             }.apply {
-                if (ssl) {
-                    useTransportSecurity()
-                } else {
-                    usePlaintext()
-                }
-            }.build().apply {
                 this.notifyWhenStateChanged(
                     ConnectivityState.CONNECTING,
                     {
                         println("Connecting to $authority")
-                    }
+                    },
                 )
                 this.notifyWhenStateChanged(
                     ConnectivityState.IDLE,
                     {
                         println("Connected to $authority")
-                    }
+                    },
                 )
                 this.notifyWhenStateChanged(
                     ConnectivityState.READY,
                     {
                         println("$authority ready")
-                    }
+                    },
                 )
                 this.notifyWhenStateChanged(
                     ConnectivityState.TRANSIENT_FAILURE,
                     {
                         println("File to connect to $authority")
-                    }
+                    },
                 )
             }
         }
@@ -105,11 +127,11 @@ class ServerManager(vm: MainViewModel, private val config: MediatorConfiguration
 
             when (rule?.schemaSource) {
                 ProtobufSchemaSource.PROTO_ROOT -> ProtoRootReflection(
-                    rule.roots
+                    rule.roots,
                 )
 
                 ProtobufSchemaSource.FILE_DESCRIPTOR_SET -> FileDescriptorSetReflection(
-                    rule.descriptors
+                    rule.descriptors,
                 )
 
                 else -> ServerProtoReflection(channel(authority, ssl)).apply {
